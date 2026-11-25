@@ -100,8 +100,8 @@ public abstract class BaseMainApplicationUI {
         initializeDeferredTabs(new DeferredTabsContext(
                 configurationTab,
                 manageAccountTab,
-                parseMultipleAccountTab,
                 accountInfoTab,
+                parseMultipleAccountTab,
                 logDisplayTab,
                 watchingNowTab,
                 accountListUI,

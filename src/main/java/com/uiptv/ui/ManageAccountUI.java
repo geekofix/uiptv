@@ -129,6 +129,10 @@ public class ManageAccountUI extends VBox {
     private final Label accountInfoTariffName = new Label();
     private final Label accountInfoTariffPlan = new Label();
     private final Label accountInfoDefaultTimezone = new Label();
+    private final Label accountInfoLiveTv = new Label();
+    private final Label accountInfoVod = new Label();
+    private final Label accountInfoSeries = new Label();
+    private final Label accountInfoCategories = new Label();
     private final Button accountInfoProfileCopyButton = new Button(I18n.tr("autoCopy"));
     private final Label accountInfoProfileTitleLabel = new Label(PROFILE_DATA_TITLE);
     private final VBox accountInfoProfileContainer = new VBox(6);
@@ -146,6 +150,10 @@ public class ManageAccountUI extends VBox {
     private AccountInfoRow accountInfoTariffNameRow;
     private AccountInfoRow accountInfoTariffPlanRow;
     private AccountInfoRow accountInfoDefaultTimezoneRow;
+    private AccountInfoRow accountInfoLiveTvRow;
+    private AccountInfoRow accountInfoVodRow;
+    private AccountInfoRow accountInfoSeriesRow;
+    private AccountInfoRow accountInfoCategoriesRow;
     private BorderPane accountInfoPane;
     AccountService service = AccountService.getInstance();
     private String accountId;
@@ -311,7 +319,7 @@ public class ManageAccountUI extends VBox {
         if (accountInfoPane == null) {
             return;
         }
-        boolean showAccountInfo = type == STALKER_PORTAL && isNotBlank(accountId) && accountInfoHasProfileJson;
+        boolean showAccountInfo = isNotBlank(accountId);
         if (!showAccountInfo) {
             formContainer.getChildren().remove(accountInfoPane);
             accountInfoPane.setManaged(false);
@@ -746,6 +754,10 @@ public class ManageAccountUI extends VBox {
         accountInfoTariffNameRow = addAccountInfoRow(grid, 3, "manageAccountInfoTariffName", accountInfoTariffName);
         accountInfoTariffPlanRow = addAccountInfoRow(grid, 4, "manageAccountInfoTariffPlan", accountInfoTariffPlan);
         accountInfoDefaultTimezoneRow = addAccountInfoRow(grid, 5, "manageAccountInfoDefaultTimezone", accountInfoDefaultTimezone);
+        accountInfoLiveTvRow = addAccountInfoRow(grid, 6, "manageAccountInfoLiveTv", accountInfoLiveTv);
+        accountInfoVodRow = addAccountInfoRow(grid, 7, "manageAccountInfoVod", accountInfoVod);
+        accountInfoSeriesRow = addAccountInfoRow(grid, 8, "manageAccountInfoSeries", accountInfoSeries);
+        accountInfoCategoriesRow = addAccountInfoRow(grid, 9, "manageAccountInfoCategories", accountInfoCategories);
 
         Region profileSpacer = new Region();
         profileSpacer.setMinHeight(2);
@@ -765,7 +777,7 @@ public class ManageAccountUI extends VBox {
                 I18n.tr("manageAccountInfoTitle"),
                 I18n.tr("manageAccountInfoDescription"),
                 content,
-                true
+                false
         );
         pane.setMaxWidth(Double.MAX_VALUE);
         return pane;
@@ -832,6 +844,10 @@ public class ManageAccountUI extends VBox {
         accountInfoHasProfileJson = isNotBlank(profileJson);
         if (!accountInfoHasProfileJson) {
             clearAccountInfoFields();
+            setAccountInfoCountValue(accountInfoLiveTvRow, accountInfoLiveTv, com.uiptv.db.ChannelDb.get().getChannelCountForAccount(accountId));
+            setAccountInfoCountValue(accountInfoVodRow, accountInfoVod, com.uiptv.db.VodChannelDb.get().getChannelCountForAccount(accountId));
+            setAccountInfoCountValue(accountInfoSeriesRow, accountInfoSeries, com.uiptv.db.SeriesChannelDb.get().getChannelCountForAccount(accountId));
+            setAccountInfoCountValue(accountInfoCategoriesRow, accountInfoCategories, com.uiptv.db.CategoryDb.get().getCategoryCountForAccount(accountId));
             ensureAccountInfoSectionVisibility(getAccountTypeByDisplay(accountType.getValue()));
             return;
         }
@@ -857,6 +873,10 @@ public class ManageAccountUI extends VBox {
         setAccountInfoValue(accountInfoTariffNameRow, accountInfoTariffName, info != null ? safeText(info.getTariffName()) : "");
         setAccountInfoValue(accountInfoTariffPlanRow, accountInfoTariffPlan, info != null ? safeText(info.getTariffPlan()) : "");
         setAccountInfoValue(accountInfoDefaultTimezoneRow, accountInfoDefaultTimezone, info != null ? safeText(info.getDefaultTimezone()) : "");
+        setAccountInfoCountValue(accountInfoLiveTvRow, accountInfoLiveTv, com.uiptv.db.ChannelDb.get().getChannelCountForAccount(accountId));
+        setAccountInfoCountValue(accountInfoVodRow, accountInfoVod, com.uiptv.db.VodChannelDb.get().getChannelCountForAccount(accountId));
+        setAccountInfoCountValue(accountInfoSeriesRow, accountInfoSeries, com.uiptv.db.SeriesChannelDb.get().getChannelCountForAccount(accountId));
+        setAccountInfoCountValue(accountInfoCategoriesRow, accountInfoCategories, com.uiptv.db.CategoryDb.get().getCategoryCountForAccount(accountId));
         setAccountInfoProfileJson(profileJson);
         ensureAccountInfoSectionVisibility(getAccountTypeByDisplay(accountType.getValue()));
     }
@@ -869,6 +889,10 @@ public class ManageAccountUI extends VBox {
         setAccountInfoValue(accountInfoTariffNameRow, accountInfoTariffName, "");
         setAccountInfoValue(accountInfoTariffPlanRow, accountInfoTariffPlan, "");
         setAccountInfoValue(accountInfoDefaultTimezoneRow, accountInfoDefaultTimezone, "");
+        setAccountInfoCountValue(accountInfoLiveTvRow, accountInfoLiveTv, 0);
+        setAccountInfoCountValue(accountInfoVodRow, accountInfoVod, 0);
+        setAccountInfoCountValue(accountInfoSeriesRow, accountInfoSeries, 0);
+        setAccountInfoCountValue(accountInfoCategoriesRow, accountInfoCategories, 0);
         setAccountInfoProfileJson("");
         updateStatusIndicator("");
         updateExpiryIndicator(null, false);
@@ -887,6 +911,17 @@ public class ManageAccountUI extends VBox {
         boolean visible = isNotBlank(safeValue);
         label.setText(safeValue);
         setRowVisible(row, visible);
+    }
+
+    private void setAccountInfoCountValue(AccountInfoRow row, Label label, int count) {
+        String value = count > 0 ? String.valueOf(count) : "-";
+        label.setText(value);
+        if (row != null) {
+            row.label.setVisible(true);
+            row.label.setManaged(true);
+            row.value.setVisible(true);
+            row.value.setManaged(true);
+        }
     }
 
     private void setRowVisible(AccountInfoRow row, boolean visible) {

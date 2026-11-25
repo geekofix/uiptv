@@ -24,6 +24,21 @@ public class CategoryDb extends BaseDb {
         return instance;
     }
 
+    public int getCategoryCountForAccount(String accountId) {
+        String sql = "SELECT COUNT(*) FROM " + CATEGORY_TABLE.getTableName() + " WHERE accountId=?";
+        try (Connection conn = connect(); PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, accountId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DatabaseAccessException("Unable to execute category count for account query", e);
+        }
+        return 0;
+    }
+
     public CategoryDb() {
         super(CATEGORY_TABLE);
     }
