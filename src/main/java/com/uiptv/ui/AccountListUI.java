@@ -282,9 +282,11 @@ public class AccountListUI extends HBox {
         sceneBox.setMaxHeight(25);
         AutoGrowPaneVBox listContainer = new AutoGrowPaneVBox(5, sceneBox, table);
         VBox.setVgrow(listContainer, Priority.ALWAYS);
-        HBox.setHgrow(listContainer, Priority.ALWAYS);
+        VBox listBox = new VBox(5, pinTabs, listContainer);
+        VBox.setVgrow(listBox, Priority.ALWAYS);
+        HBox.setHgrow(listBox, Priority.ALWAYS);
         HBox.setHgrow(content, Priority.ALWAYS);
-        getChildren().setAll(listContainer, content);
+        getChildren().setAll(listBox, content);
     }
 
     private void setCurrentContent(Node content) {
