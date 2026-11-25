@@ -1,5 +1,13 @@
 <img src="https://github.com/xixogo5105/uiptv/assets/161976171/5563a042-157e-4ae7-bb6e-a72b38c8aa62"  width="64" height="64"  alt=""/>
 
+> [!NOTE]
+> **Fork notice:** This repository is a personal test project based on
+> [xixogo5105/uiptv](https://github.com/xixogo5105/uiptv) (upstream author: SPC).
+> It continues the legacy 0.1.11 UI line with own fixes and features.
+> Development is supported by [Mistral AI](https://mistral.ai) (Vibe Code).
+> It is not affiliated with or endorsed by the original author.
+> License stays MIT, see [LICENSE](LICENSE).
+
 > [!IMPORTANT]
 > **Attention!!!** Volunteers are needed for translations. [Click here](TRANSLATIONS.md).
 
