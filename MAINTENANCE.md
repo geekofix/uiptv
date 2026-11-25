@@ -1,0 +1,75 @@
+# MAINTENANCE — Projektstatus und Arbeitsweise
+
+Diese Datei ist die verbindliche Referenz für alle Sitzungen (auch neue/andere Chat-Sitzungen).
+Sie wird bei jeder relevanten Änderung aktualisiert.
+
+## Ziel des Projekts
+
+Die **exakte Version v0.1.11 (Release 11, „Legacy-GUI")** von UIPTV behutsam weiterentwickeln:
+neue Features, kleine Code-Verbesserungen, Bugfixes.
+
+**Nicht** Ziel:
+
+- kein Rebranding
+- keine Übernahme der 1.x-UI/-Struktur von Upstream (die gilt als zu träge, mehr Klicks, unübersichtlich)
+- **niemals** Merges vom Upstream-`main` (steht auf 1.1.1, neues Design)
+- Versionen/Releases/Veröffentlichungen nur auf ausdrückliche Anweisung des Nutzers
+- Repo-Sichtbarkeit nicht eigenständig ändern
+
+## Basis und Branches
+
+| Branch | Rolle | Regel |
+|---|---|---|
+| `baseline-0.1.11` | **BASIS** — exakt Tag `v0.1.11` (Commit `20660bf`) plus nur die pacman-Bau-Skripte | **Darf nie überschrieben, gelöscht oder inhaltlich verändert werden.** Keine Feature-Commits hier. |
+| `dev-0.1.11` | **Arbeitsbranch** — alle Weiterentwicklungen | Features/Fixes hier committen; basiert auf `baseline-0.1.11` |
+| `main` | Upstream-Zustand (1.1.1, neues Design) | Nur Referenz. Nicht anfassen. |
+
+Gelöschte Altlasten (2026-11-25): `legacy` und `legacy-dev` (Upstream-Legacy-Linie). Sie zeigten auf
+KDE/Wayland einen leeren linken Navigationsbereich (Reiter wurden unsichtbar gezeichnet, Ursache nie
+geklärt; auch JavaFX-Pin auf 26.0.1 half nicht). Nutzer-Entscheidung: zurück auf exakte 0.1.11-Basis.
+Die Commits existieren weiterhin im Original-Upstream (xixogo5105/uiptv, Branch `legacy`) und im
+Git-Verlauf, falls je ein einzelner Fix zurückportiert werden soll.
+
+## Installation (CachyOS / Arch / pacman)
+
+GitHub Actions baut bei jedem Push auf `baseline-0.1.11`/`dev-0.1.11` automatisch:
+
+- **`UIPTV-0.1.11-pacman`** → natives Arch-Paket (`uiptv-…pkg.tar.zst`)
+  - Installation: `sudo pacman -U uiptv-…pkg.tar.zst`
+  - Deinstallation: `sudo pacman -R uiptv`
+  - App: Menüeintrag „UIPTV" oder Befehl `uiptv`; Programm liegt in `/opt/uiptv`
+- Relevant ist der Workflow **„Baseline 0.1.11 Arch package"** (`.github/workflows/baseline-arch.yml`).
+- Downloads (Artifacts) laufen nach **1 Tag** ab (Einstellung `ARTIFACT_RETENTION_DAYS`). Falls abgelaufen:
+Workflow per `workflow_dispatch` (Reiter Actions → Run workflow) neu anstoßen.
+
+Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je nach Setup)
+
+## Bisherige Historie (chronologisch)
+
+1. `legacy`/`legacy-dev`-Struktur auf Basis des Upstream-Legacy-Zweigs aufgebaut → GUI-Problem auf
+   KDE/Wayland (linke Reiterspalte leer) → verworfen, Branches gelöscht.
+2. Arch-Paketbau etabliert: `scripts/arch/PKGBUILD` + Workflow; .pkg.tar.zst wird aus dem
+   jpackage-APP_IMAGE in einem `archlinux:base-devel`-Container mit makepkg gepackt.
+   Wichtige Lehre: makepkg akzeptiert **keine Verzeichnisse** in source=() — App-Image wird per
+   `${startdir}` eingelesen.
+3. `baseline-0.1.11` erstellt (Tag v0.1.11 + Paketbau-Skripte separiert), Nutzer hat das Paket
+   installiert, alte Datenbank übernommen: **Funktioniert vollständig wie die frühere debtap-Installation.**
+
+## Aktuell offene Punkte / ToDos
+
+- [ ] Erste Feature-Wünsche des Nutzers sammeln und priorisieren (noch nicht benannt)
+- [ ] Empfohlen: branch protection für `baseline-0.1.11` aktivieren
+      (Settings → Branches → Regel: kein Force-Push, kein Löschen) — muss der Nutzer selbst klicken
+- [ ] Repo ist ein öffentlicher Fork; Privatstellung nur über GitHub-Support („detach fork") möglich —
+      bewusst vorerst akzeptiert (Nutzer-Entscheidung, „Option 2")
+- [ ] Artifact-Aufbewahrung aktuell 1 Tag — auf Wunsch erhöhen
+
+## Arbeitstechnik (Verbindlich!)
+
+- Vor jedem Arbeitsschritt Repo-Zustand prüfen (`git status`, Branch, `MAINTENANCE.md` lesen)
+- Kleine, prüfbare Schritte; pro Änderung ein Commit (Messages auf Englisch: was + warum)
+- Backports aus dem Upstream (`xixogo5105/uiptv`, Branches `legacy`/`main`) nur **einzeln** und nur,
+  wenn sie zur 0.1.11-Struktur passen; niemals ganze Zweige mergen
+- Nach jedem Build: `sudo pacman -U …` Installation durch Nutzer; nur bei bestätigtem „funktioniert"
+  gilt ein Schritt als abgeschlossen
+- Diese Datei am Ende jeder Sitzung auf den neuesten Stand bringen
