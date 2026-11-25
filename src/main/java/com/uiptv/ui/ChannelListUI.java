@@ -347,6 +347,9 @@ public class ChannelListUI extends HBox {
         applyThumbnailMode(ThumbnailAwareUI.areThumbnailsEnabled());
 
         channelName.setSortType(TableColumn.SortType.ASCENDING);
+        table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        channelName.setPrefWidth(javafx.scene.layout.Region.USE_COMPUTED_SIZE);
+        channelName.setMinWidth(240);
 
         configureLoadingProgressBar();
         VBox searchBox = new VBox(5, loadingProgressBox, table.getSearchTextField());
@@ -421,6 +424,15 @@ public class ChannelListUI extends HBox {
         return false;
     }
 
+
+    private Tooltip createChannelTooltip(String text) {
+        Tooltip tooltip = new Tooltip(text);
+        tooltip.setWrapText(true);
+        tooltip.setMaxWidth(420);
+        tooltip.setStyle("-fx-background-radius: 6; -fx-border-radius: 6; -fx-font-size: 0.95em;");
+        return tooltip;
+    }
+
     private TableCell<ChannelItem, String> createThumbnailCell() {
         return new TableCell<>() {
 
@@ -466,6 +478,7 @@ public class ChannelListUI extends HBox {
                 }
 
                 nameLabel.setText(item);
+                setTooltip(createChannelTooltip(item));
                 boolean drmProtected = channelItem.getChannel() != null && PlayerService.getInstance().isDrmProtected(channelItem.getChannel());
                 drmBadge.setVisible(drmProtected);
                 drmBadge.setManaged(drmProtected);
@@ -525,6 +538,7 @@ public class ChannelListUI extends HBox {
                 }
 
                 nameLabel.setText(item);
+                setTooltip(createChannelTooltip(item));
                 boolean drmProtected = channelItem.getChannel() != null && PlayerService.getInstance().isDrmProtected(channelItem.getChannel());
                 drmBadge.setVisible(drmProtected);
                 drmBadge.setManaged(drmProtected);

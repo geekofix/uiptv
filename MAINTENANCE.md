@@ -71,6 +71,12 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    mehr automatisch beim Start, sondern manuell per Terminal-Befehl `uiptv -names` (mit Fortschrittsanzeige
    und Restzeitschätzung; beendet sich ohne GUI-Start). Auf Nutzer-Test wartend.
 
+6. **Channel-Liste: Tooltip + horizontales Scrollen (Version 0.1.13, TEST):** In der Senderliste
+   (ganz rechts) zeigt ein Tooltip bei Maus-Berührung den vollständigen Sendernamen (max ~420px breit,
+   mit Umbruch); zusätzlich kann die Spalte bei langen Namen horizontal scrollen (UNCONSTRAINED-Resize-
+   Policy, Spaltenbreite automatisch nach Inhalt). Beides ist NEU und VOM NUTZER NOCH NICHT BEWERTET:
+   Er entscheidet, ob Tooltip, Scrollen oder beides bleibt — ggf. wieder entfernen bzw. nur eines behalten!
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,
