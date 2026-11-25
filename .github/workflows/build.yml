@@ -3,14 +3,7 @@ env:
   ARTIFACT_RETENTION_DAYS: 1
 
 on:
-  push:
-    branches:
-      - '**'
-    tags:
-      - 'v*.*.*'
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   test:

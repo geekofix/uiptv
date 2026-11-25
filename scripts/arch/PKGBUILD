@@ -1,0 +1,21 @@
+pkgname=uiptv
+pkgver=0.1.11
+pkgrel=1
+pkgdesc="UIPTV IPTV player (v0.1.11 legacy baseline)"
+arch=('x86_64')
+url="https://github.com/geekofix/uiptv"
+license=('MIT')
+provides=('uiptv')
+conflicts=('uiptv')
+options=('!strip')
+
+package() {
+    install -dm755 "${pkgdir}/usr/bin"
+    install -dm755 "${pkgdir}/opt/uiptv"
+    cp -a "${startdir}/UIPTV/." "${pkgdir}/opt/uiptv/"
+
+    install -Dm644 "${startdir}/UIPTV/lib/UIPTV.png" "${pkgdir}/opt/uiptv/lib/UIPTV.png"
+    install -Dm644 "${startdir}/UIPTV.desktop" "${pkgdir}/usr/share/applications/UIPTV.desktop"
+
+    ln -s /opt/uiptv/bin/UIPTV "${pkgdir}/usr/bin/uiptv"
+}

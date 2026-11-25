@@ -1,0 +1,54 @@
+name: Baseline 0.1.11 Arch package
+
+on:
+  push:
+    branches:
+      - baseline-0.1.11
+  workflow_dispatch:
+
+env:
+  ARTIFACT_RETENTION_DAYS: 1
+
+jobs:
+  build_baseline_arch:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build app image
+        run: xvfb-run -a mvn -B clean package -DskipTests -P linux-x86_64,pkg-app-image
+
+      - name: Stage pacman package sources
+        shell: bash
+        run: |
+          mkdir -p target/archpkg
+          cp -r target/dist/UIPTV target/archpkg/
+          cp scripts/arch/PKGBUILD target/archpkg/
+          cp src/main/resources/jpackage/linux/UIPTV.desktop target/archpkg/
+          sed -i "s/^pkgver=.*/pkgver=$(sed -n 's:.*<version>\([^<]*\)</version>.*:\1:p' pom.xml | head -1)/" target/archpkg/PKGBUILD
+
+      - name: Build pacman package
+        run: |
+          docker run --rm -v "$PWD:/work" archlinux:base-devel bash -c '
+            useradd -m builder
+            chown -R builder:builder /work/target/archpkg
+            cd /work/target/archpkg
+            sudo -u builder makepkg -f --nodeps --noconfirm
+          '
+
+      - name: Upload Arch artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: UIPTV-0.1.11-pacman
+          path: target/archpkg/*.pkg.tar.zst
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
