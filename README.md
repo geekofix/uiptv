@@ -35,6 +35,9 @@ Prebuilt packages are built automatically by GitHub Actions on every change
   `sudo pacman -U uiptv-<version>-x86_64.pkg.tar.zst`.
   Update with the same command using a newer package file; older package files
   can be kept to roll back at any time.
+- **Rename imported accounts to the current scheme** (e.g. after restoring an
+  old database) with the terminal command `uiptv -names`. It shows live
+  progress and exits without starting the app.
 - **Other systems:** build installers with Maven (see below) or use the
   portable app bundle (jpackage app-image) that the standard upstream build
   produces for Windows, Linux, and macOS.

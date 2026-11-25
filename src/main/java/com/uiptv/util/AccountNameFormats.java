@@ -47,13 +47,27 @@ public final class AccountNameFormats {
     public record SuffixMatch(String baseName, int number, boolean spaced) {
     }
 
-    public static void normalizeExistingAccountNames() {
+    public static int normalizeExistingAccountNames() {
+        return normalizeExistingAccountNames((processed, total, renamed) -> {
+        });
+    }
+
+    public interface ProgressListener {
+        void onProgress(int processed, int total, int renamed);
+    }
+
+    public static int normalizeExistingAccountNames(ProgressListener progressListener) {
         AccountDb accountDb = AccountDb.get();
         List<Account> accounts = accountDb.getAccounts();
         if (accounts == null || accounts.isEmpty()) {
-            return;
+            return 0;
         }
+        int totalAccounts = accounts.size();
+        int processedAccounts = 0;
+        ProgressListener listener = progressListener != null ? progressListener : (processed, total, renamed) -> {
+        };
 
+        int renamed = 0;
         Map<String, List<Account>> groups = new LinkedHashMap<>();
         for (Account account : accounts) {
             String baseName = resolveBaseName(account.getAccountName());
@@ -91,9 +105,13 @@ public final class AccountNameFormats {
                 usedNumbers.add(number);
                 if (!newName.equals(currentName) && accountDb.getAccountByName(newName) == null) {
                     accountDb.updateAccountName(account, newName);
+                    renamed++;
                 }
+                processedAccounts++;
+                listener.onProgress(processedAccounts, totalAccounts, renamed);
             }
         }
+        return renamed;
     }
 
     private static int freeNumber(Set<Integer> usedNumbers, int startNumber) {

@@ -67,7 +67,9 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    werden beim App-Start automatisch auf das neue Schema umgeschrieben (per `AccountDb.updateAccountName`,
    NICHT über `save()`, da dieses anhand des Namens prüft). Neuer Hauptreiter „Account Info" zwischen
    Account und Import Bulk Accounts: Tabelle mit Status, Ablaufdatum und Live/VOD/Serien-Zählung je
-   Account, direkt aus der DB gelesen (aktualisiert sich mit jedem Cache-Reload). Auf Nutzer-Test wartend.
+   Account, direkt aus der DB gelesen (aktualisiert sich mit jedem Cache-Reload). Umbenennung erfolgt NICHT
+   mehr automatisch beim Start, sondern manuell per Terminal-Befehl `uiptv -names` (mit Fortschrittsanzeige
+   und Restzeitschätzung; beendet sich ohne GUI-Start). Auf Nutzer-Test wartend.
 
 ## Aktuell offene Punkte / ToDos
 

@@ -76,4 +76,3 @@
 0196_create_series_watching_now_snapshot_table.sql
 0197_add_configuration_filter_lock_unlock_duration_minutes.sql
 0198_add_account_pin_level.sql
-0199_add_configuration_account_name_normalization_done.sql

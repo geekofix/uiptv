@@ -116,7 +116,6 @@ public class ConfigurationDb extends BaseDb {
         c.setEnableVlcHttpForwardCookies(missingOrTrue(resultSet, "enableVlcHttpForwardCookies"));
         c.setResolveChainAndDeepRedirects(safeBoolean(resultSet, "resolveChainAndDeepRedirects"));
         c.setFilterLockUnlockDurationMinutes(duration);
-        c.setAccountNameNormalizationDone(safeBoolean(resultSet, "accountNameNormalizationDone"));
         c.setDbId(nullSafeString(resultSet, "id"));
         return c;
     }
@@ -135,7 +134,7 @@ public class ConfigurationDb extends BaseDb {
             String updateQuery = updateTableSql(CONFIGURATION_TABLE);
             try (Connection conn = connect(); PreparedStatement statement = conn.prepareStatement(updateQuery)) {
                 setParameters(statement, configuration);
-                statement.setString(29, current.getDbId());
+                statement.setString(28, current.getDbId());
                 statement.execute();
             } catch (SQLException e) {
                 throw new DatabaseAccessException("Unable to execute update query", e);
@@ -180,7 +179,6 @@ public class ConfigurationDb extends BaseDb {
         statement.setString(25, configuration.isEnableVlcHttpForwardCookies() ? "1" : "0");
         statement.setString(26, configuration.isResolveChainAndDeepRedirects() ? "1" : "0");
         statement.setString(27, configuration.getFilterLockUnlockDurationMinutes());
-        statement.setString(28, configuration.isAccountNameNormalizationDone() ? "1" : "0");
      }
 
     private boolean missingOrTrue(ResultSet resultSet, String columnName) {
