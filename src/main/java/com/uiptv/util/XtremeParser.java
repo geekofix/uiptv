@@ -194,14 +194,11 @@ public class XtremeParser implements AccountParser {
 
     private String nextUniqueAccountName(String url, Set<String> processedNames) {
         String baseName = accountNameFromUrl(url);
-        if (accountProvider.apply(baseName) == null && !processedNames.contains(baseName)) {
-            return baseName;
-        }
         int counter = 1;
-        String candidate = baseName + " (" + counter + ")";
+        String candidate = baseName + " (" + String.format("%04d", counter) + ")";
         while (accountProvider.apply(candidate) != null || processedNames.contains(candidate)) {
             counter++;
-            candidate = baseName + " (" + counter + ")";
+            candidate = baseName + " (" + String.format("%04d", counter) + ")";
         }
         return candidate;
     }

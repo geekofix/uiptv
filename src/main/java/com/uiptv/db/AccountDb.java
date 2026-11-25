@@ -12,6 +12,7 @@ import java.util.List;
 import static com.uiptv.db.DatabaseUtils.DbTable.ACCOUNT_TABLE;
 import static com.uiptv.db.DatabaseUtils.insertTableSql;
 import static com.uiptv.db.DatabaseUtils.updateTableSql;
+import static com.uiptv.db.DatabaseUtils.validatedTableName;
 import static com.uiptv.db.SQLConnection.connect;
 import static com.uiptv.util.StringUtils.isBlank;
 import static com.uiptv.util.StringUtils.isNotBlank;
@@ -93,6 +94,21 @@ public class AccountDb extends BaseDb {
             statement.execute();
         } catch (SQLException e) {
             throw new DatabaseAccessException("Unable to execute query", e);
+        }
+    }
+
+    public void updateAccountName(Account account, String newAccountName) {
+        if (account == null || isBlank(account.getDbId()) || isBlank(newAccountName)) {
+            return;
+        }
+        String updateQuery = "UPDATE " + validatedTableName(ACCOUNT_TABLE) + " SET accountName=? WHERE id=?"; 
+        try (Connection conn = connect(); PreparedStatement statement = conn.prepareStatement(updateQuery)) {
+            statement.setString(1, newAccountName);
+            statement.setInt(2, Integer.valueOf(account.getDbId()));
+            statement.execute();
+            account.setAccountName(newAccountName);
+        } catch (SQLException e) {
+            throw new DatabaseAccessException("Unable to execute account name update query", e);
         }
     }
 

@@ -256,10 +256,10 @@ public class StalkerPortalParser implements AccountParser {
     private String nextUniqueAccountName(String url, Set<String> processedNames) {
         String baseName = getNameFromUrl(url);
         int counter = 1;
-        String uniqueName = baseName + "(" + counter + ")";
+        String uniqueName = baseName + " (" + String.format("%04d", counter) + ")";
         while (accountProvider.apply(uniqueName) != null || processedNames.contains(uniqueName)) {
             counter++;
-            uniqueName = baseName + "(" + counter + ")";
+            uniqueName = baseName + " (" + String.format("%04d", counter) + ")";
         }
         return uniqueName;
     }
@@ -282,13 +282,17 @@ public class StalkerPortalParser implements AccountParser {
             return directMatch;
         }
 
-        for (int counter = 1; counter < 1000; counter++) {
-            Account candidate = accountProvider.apply(baseName + "(" + counter + ")");
-            if (candidate == null) {
+        for (int counter = 1; counter < 100000; counter++) {
+            Account candidate = accountProvider.apply(baseName + " (" + String.format("%04d", counter) + ")");
+            Account legacyCandidate = accountProvider.apply(baseName + "(" + counter + ")");
+            if (candidate == null && legacyCandidate == null) {
                 return null;
             }
-            if (isSameExtraParamAccount(candidate, account)) {
+            if (candidate != null && isSameExtraParamAccount(candidate, account)) {
                 return candidate;
+            }
+            if (legacyCandidate != null && isSameExtraParamAccount(legacyCandidate, account)) {
+                return legacyCandidate;
             }
         }
 

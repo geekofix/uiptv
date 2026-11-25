@@ -10,7 +10,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.uiptv.db.DatabaseAccessException;
 import static com.uiptv.db.DatabaseUtils.DbTable.SERIES_CHANNEL_TABLE;
+import static com.uiptv.db.DatabaseUtils.validatedTableName;
 import static com.uiptv.db.DatabaseUtils.insertTableSql;
 import static com.uiptv.db.SQLConnection.connect;
 
@@ -152,5 +154,19 @@ public class SeriesChannelDb extends BaseDb {
         c.setClearKeysJson(nullSafeString(resultSet, "clearKeysJson"));
         c.setExtraJson(nullSafeString(resultSet, "extraJson"));
         return c;
+    }
+    public int getChannelCountForAccount(String accountId) {
+        String sql = "SELECT COUNT(*) FROM " + validatedTableName(SERIES_CHANNEL_TABLE) + " WHERE accountId=?";
+        try (Connection conn = connect(); PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, accountId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DatabaseAccessException("Unable to execute channel count for account query", e);
+        }
+        return 0;
     }
 }
