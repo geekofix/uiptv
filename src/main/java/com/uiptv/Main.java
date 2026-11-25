@@ -11,7 +11,7 @@ public class Main {
                 double percent = total <= 0 ? 100.0 : processed * 100.0 / total;
                 long elapsed = System.currentTimeMillis() - startedAt[0];
                 String eta = processed <= 0 ? "-" : (elapsed * (total - processed) / processed / 1000) + "s";
-                System.out.printf("UIPTV: %d/%d accounts (%.0f%%) renamed: %d, remaining: %s   ",
+                System.out.printf("\rUIPTV: %d/%d accounts (%.0f%%) renamed: %d, remaining: %s   ",
                         processed, total, percent, count, eta);
                 System.out.flush();
             });
