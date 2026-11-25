@@ -78,7 +78,8 @@ public class DatabaseUtils {
                 new DataColumn("enableVlcHttpUserAgent", "TEXT"),
                 new DataColumn("enableVlcHttpForwardCookies", "TEXT"),
                 new DataColumn("resolveChainAndDeepRedirects", "TEXT"),
-                new DataColumn("filterLockUnlockDurationMinutes", "TEXT")
+                new DataColumn("filterLockUnlockDurationMinutes", "TEXT"),
+                new DataColumn("accountNameNormalizationDone", "TEXT")
         )));
         dbStructure.put(DbTable.THEME_CSS_OVERRIDE_TABLE.getTableName(), new ArrayList<>(Arrays.asList(
                 new DataColumn("id", INTEGER_PRIMARY_KEY),

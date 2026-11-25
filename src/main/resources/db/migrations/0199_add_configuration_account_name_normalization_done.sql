@@ -1,0 +1,1 @@
+--@add_column Configuration accountNameNormalizationDone TEXT DEFAULT '0'
