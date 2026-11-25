@@ -11,6 +11,16 @@ public class AccountResolver {
     public static final String PIN_SVG_HEAD_PATH = "m 56.34936,106.22036 c 20.30938,0.88278 45.68909,32.12704 73.173,75.95489 18.76942,29.93108 45.31357,11.58173 54.19751,2.7927 8.31501,-8.2259 25.42173,-32.179 -3.72915,-51.99008 -42.68539,-29.00919 -72.93354,-55.50764 -73.173,-75.954905 L 81.58356,81.621661 Z";
     public static final String PIN_SVG_STEM_FILL = "#cad2d2";
     public static final String PIN_SVG_HEAD_FILL = "#e30000";
+    public static final String[] PIN_SVG_HEAD_FILLS = {
+            "#e30000", "#1e6ff0", "#12a145", "#f2a007", "#8b46c9"
+    };
+
+    public static String pinHeadFillForLevel(int pinLevel) {
+        if (pinLevel < 1 || pinLevel > PIN_SVG_HEAD_FILLS.length) {
+            return PIN_SVG_HEAD_FILL;
+        }
+        return PIN_SVG_HEAD_FILLS[pinLevel - 1];
+    }
     public static final String PIN_SVG_VIEW_BOX = "0 0 320 320";
     public static final double PIN_SVG_SCALE = 0.075;
 
@@ -31,10 +41,11 @@ public class AccountResolver {
         row.setDbId(account.getDbId());
         row.setType(account.getType() != null ? account.getType().name() : "");
         row.setPinToTop(account.isPinToTop());
+        row.setPinLevel(account.getPinLevel());
         row.setPinSvgStemPath(PIN_SVG_STEM_PATH);
         row.setPinSvgHeadPath(PIN_SVG_HEAD_PATH);
         row.setPinSvgStemFill(PIN_SVG_STEM_FILL);
-        row.setPinSvgHeadFill(PIN_SVG_HEAD_FILL);
+        row.setPinSvgHeadFill(pinHeadFillForLevel(account.getPinLevel()));
         row.setPinSvgViewBox(PIN_SVG_VIEW_BOX);
         row.setPinSvgScale(PIN_SVG_SCALE);
         return row;
@@ -45,6 +56,7 @@ public class AccountResolver {
         private String dbId;
         private String type;
         private boolean pinToTop;
+        private int pinLevel;
         private String pinSvgStemPath;
         private String pinSvgHeadPath;
         private String pinSvgStemFill;
@@ -82,6 +94,14 @@ public class AccountResolver {
 
         public void setPinToTop(boolean pinToTop) {
             this.pinToTop = pinToTop;
+        }
+
+        public int getPinLevel() {
+            return pinLevel;
+        }
+
+        public void setPinLevel(int pinLevel) {
+            this.pinLevel = pinLevel;
         }
 
         public String getPinSvgStemPath() {

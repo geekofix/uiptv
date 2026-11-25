@@ -67,7 +67,10 @@ public class AccountListUI extends HBox {
     private Callback<Object> onDeleteCallback;
     private boolean isPromptShowing = false;
     private final ObservableList<AccountItem> masterAccountItems = FXCollections.observableArrayList();
-    private AccountSortMode accountSortMode = AccountSortMode.DEFAULT;
+    private final TabPane pinTabs = new TabPane();
+    private final Tab allAccountsTab = new Tab(I18n.tr("commonAll"));
+    private final Tab[] pinnedAccountsTabs = new Tab[AccountResolver.PIN_SVG_HEAD_FILLS.length];
+    private final AccountSortMode[] accountSortModes = new AccountSortMode[AccountResolver.PIN_SVG_HEAD_FILLS.length + 1];
     private final AccountChangeListener accountChangeListener = revision -> Platform.runLater(this::refreshIfAttached);
 
     public AccountListUI() { // Removed MediaPlayer argument
@@ -122,11 +125,27 @@ public class AccountListUI extends HBox {
                     new SimpleStringProperty(account.getDbId()),
                     new SimpleStringProperty(account.getType()),
                     account.isPinToTop(),
+                    account.getPinLevel(),
                     index
             ));
         }
         masterAccountItems.setAll(catList);
         applyAccountOrdering();
+    }
+
+    private int activePinLevel() {
+        for (int i = 0; i < pinnedAccountsTabs.length; i++) {
+            if (pinnedAccountsTabs[i] != null && pinnedAccountsTabs[i] == pinTabs.getSelectionModel().getSelectedItem()) {
+                return i + 1;
+            }
+        }
+        return 0;
+    }
+
+    private AccountSortMode activeSortMode() {
+        int sortIndex = activePinLevel();
+        AccountSortMode mode = accountSortModes[sortIndex];
+        return mode != null ? mode : AccountSortMode.ASCENDING;
     }
 
     private void initWidgets() {
@@ -141,6 +160,7 @@ public class AccountListUI extends HBox {
         accountName.setCellValueFactory(cellData -> cellData.getValue().accountNameProperty());
         accountName.setCellFactory(_ -> createAccountNameCell());
         installAccountHeaderSortHandler();
+        setupPinTabs();
         HBox sceneBox = new HBox(5, table.getTextField(), table.getMenuButton(), newAccountButton);
         sceneBox.setAlignment(Pos.CENTER_LEFT);
         sceneBox.setMaxHeight(25);
@@ -149,7 +169,7 @@ public class AccountListUI extends HBox {
         table.getTextField().setMaxWidth(Double.MAX_VALUE);
         newAccountButton.setManaged(embeddedMode);
         newAccountButton.setVisible(embeddedMode);
-        AutoGrowPaneVBox contentBox = new AutoGrowPaneVBox(5, sceneBox, table);
+        AutoGrowPaneVBox contentBox = new AutoGrowPaneVBox(5, pinTabs, sceneBox, table);
         VBox.setVgrow(contentBox, Priority.ALWAYS);
         listView.getChildren().setAll(contentBox);
         if (embeddedMode) {
@@ -346,7 +366,9 @@ public class AccountListUI extends HBox {
                 }
 
                 nameLabel.setText(item);
-                boolean pinned = accountItem.isPinToTop();
+                int pinLevel = accountItem.getPinLevel();
+                boolean pinned = pinLevel > 0 || accountItem.isPinToTop();
+                pinHead.setFill(Color.web(AccountResolver.pinHeadFillForLevel(pinLevel)));
                 pinIconWrapper.setVisible(pinned);
                 pinIconWrapper.setManaged(pinned);
                 setText(null);
@@ -367,15 +389,48 @@ public class AccountListUI extends HBox {
     }
 
     private void applyAccountOrdering() {
+        int pinLevel = activePinLevel();
         List<AccountItem> orderedItems = new ArrayList<>(masterAccountItems);
-        switch (accountSortMode) {
-            case DEFAULT -> orderedItems.sort(Comparator.comparing(AccountItem::isPinToTop).reversed()
-                    .thenComparingInt(AccountItem::getOriginalOrder));
+        if (pinLevel > 0) {
+            orderedItems = orderedItems.stream()
+                    .filter(item -> item.getPinLevel() == pinLevel)
+                    .collect(Collectors.toList());
+        }
+        switch (activeSortMode()) {
+            case DEFAULT -> orderedItems.sort(Comparator.comparingInt(AccountItem::getPinLevel).reversed()
+                    .thenComparing(ACCOUNT_NAME_COMPARATOR));
             case DESCENDING -> orderedItems.sort(ACCOUNT_NAME_COMPARATOR.reversed());
             default -> orderedItems.sort(ACCOUNT_NAME_COMPARATOR);
         }
         table.setItems(FXCollections.observableArrayList(orderedItems));
         table.filterByAccountType();
+    }
+
+    private void setupPinTabs() {
+        pinTabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        pinTabs.setPrefHeight(36);
+        pinTabs.setMinHeight(36);
+        pinTabs.setMaxHeight(36);
+        pinTabs.setTabMinHeight(28);
+        pinTabs.setTabMaxHeight(28);
+        allAccountsTab.setClosable(false);
+        allAccountsTab.setUserData(0);
+        List<Tab> tabs = new ArrayList<>();
+        tabs.add(allAccountsTab);
+        for (int i = 0; i < pinnedAccountsTabs.length; i++) {
+            Tab tab = new Tab(String.valueOf(i + 1));
+            tab.setClosable(false);
+            tab.setUserData(i + 1);
+            pinnedAccountsTabs[i] = tab;
+            tabs.add(tab);
+        }
+        pinTabs.getTabs().setAll(tabs);
+        pinTabs.getSelectionModel().selectFirst();
+        pinTabs.getSelectionModel().selectedItemProperty().addListener((_, _, selectedTab) -> {
+            if (selectedTab != null) {
+                applyAccountOrdering();
+            }
+        });
     }
 
     private void installAccountHeaderSortHandler() {
@@ -404,12 +459,14 @@ public class AccountListUI extends HBox {
         if (event.getButton() != MouseButton.PRIMARY || event.getClickCount() != 1) {
             return;
         }
-        accountSortMode = switch (accountSortMode) {
+        int sortIndex = activePinLevel();
+        AccountSortMode sortMode = activeSortMode();
+        accountSortModes[sortIndex] = switch (sortMode) {
             case DEFAULT -> AccountSortMode.ASCENDING;
             case ASCENDING -> AccountSortMode.DESCENDING;
             case DESCENDING -> AccountSortMode.DEFAULT;
         };
-        accountName.setSortType(accountSortMode == AccountSortMode.DESCENDING
+        accountName.setSortType(accountSortModes[sortIndex] == AccountSortMode.DESCENDING
                 ? TableColumn.SortType.DESCENDING
                 : TableColumn.SortType.ASCENDING);
         applyAccountOrdering();
@@ -668,13 +725,15 @@ public class AccountListUI extends HBox {
         private final SimpleStringProperty accountId;
         private final SimpleStringProperty accountType;
         private final boolean pinToTop;
+        private final int pinLevel;
         private final int originalOrder;
 
-        public AccountItem(SimpleStringProperty accountName, SimpleStringProperty accountId, SimpleStringProperty accountType, boolean pinToTop, int originalOrder) {
+        public AccountItem(SimpleStringProperty accountName, SimpleStringProperty accountId, SimpleStringProperty accountType, boolean pinToTop, int pinLevel, int originalOrder) {
             this.accountName = accountName;
             this.accountId = accountId;
             this.accountType = accountType;
             this.pinToTop = pinToTop;
+            this.pinLevel = pinLevel;
             this.originalOrder = originalOrder;
         }
 
@@ -700,6 +759,10 @@ public class AccountListUI extends HBox {
 
         public boolean isPinToTop() {
             return pinToTop;
+        }
+
+        public int getPinLevel() {
+            return pinLevel;
         }
 
         public int getOriginalOrder() {

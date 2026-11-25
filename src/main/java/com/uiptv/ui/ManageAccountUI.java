@@ -6,6 +6,7 @@ import com.uiptv.api.Callback;
 import com.uiptv.model.Account;
 import com.uiptv.model.AccountInfo;
 import com.uiptv.service.AccountInfoService;
+import com.uiptv.service.AccountResolver;
 import com.uiptv.service.AccountService;
 import com.uiptv.service.CacheService;
 import com.uiptv.service.CacheServiceImpl;
@@ -75,7 +76,41 @@ public class ManageAccountUI extends VBox {
     private final UIptvText deviceId1 = new UIptvText("deviceId1", "manageDeviceId1Prompt", 5);
     private final UIptvText deviceId2 = new UIptvText("deviceId2", "manageDeviceId2Prompt", 5);
     private final UIptvText signature = new UIptvText("signature", "manageSignaturePrompt", 5);
-    private final CheckBox pinToTopCheckBox = new CheckBox(I18n.tr("autoPinAccountOnTop"));
+    private final CheckBox[] pinLevelCheckBoxes = new CheckBox[AccountResolver.PIN_SVG_HEAD_FILLS.length];
+    private final HBox pinLevelsContainer = new HBox(10);
+    {
+        for (int i = 0; i < pinLevelCheckBoxes.length; i++) {
+            int level = i + 1;
+            CheckBox box = new CheckBox(I18n.tr("autoPinLevel" + level));
+            box.selectedProperty().addListener((_, _, selected) -> {
+                if (selected) {
+                    for (int j = 0; j < pinLevelCheckBoxes.length; j++) {
+                        if (pinLevelCheckBoxes[j] != null && j + 1 != level) {
+                            pinLevelCheckBoxes[j].setSelected(false);
+                        }
+                    }
+                }
+            });
+            pinLevelCheckBoxes[i] = box;
+        }
+        pinLevelsContainer.setAlignment(Pos.CENTER_LEFT);
+        pinLevelsContainer.getChildren().setAll(pinLevelCheckBoxes);
+    }
+    private int selectedPinLevel() {
+        for (int i = 0; i < pinLevelCheckBoxes.length; i++) {
+            if (pinLevelCheckBoxes[i] != null && pinLevelCheckBoxes[i].isSelected()) {
+                return i + 1;
+            }
+        }
+        return 0;
+    }
+    private void selectPinLevel(int pinLevel) {
+        for (int i = 0; i < pinLevelCheckBoxes.length; i++) {
+            if (pinLevelCheckBoxes[i] != null) {
+                pinLevelCheckBoxes[i].setSelected(i + 1 == pinLevel);
+            }
+        }
+    }
     private final CheckBox resolveChainAndDeepRedirectsCheckBox = new CheckBox(I18n.tr("manageResolveChainAndDeepRedirects"));
     private final UIptvCombo httpMethodCombo = new UIptvCombo("httpMethod", "manageHttpMethodPrompt", 150);
     private final UIptvCombo timezoneCombo = new UIptvCombo("timezone", "manageTimezonePrompt", 250);
@@ -237,17 +272,17 @@ public class ManageAccountUI extends VBox {
         formContainer.getChildren().clear();
         switch (type) {
             case STALKER_PORTAL:
-                formContainer.getChildren().addAll(accountType, name, url, macAddressContainer, macAddressList, serialNumber, deviceId1, deviceId2, signature, username, password, httpMethodCombo, timezoneCombo, pinToTopCheckBox, resolveChainAndDeepRedirectsCheckBox);
+                formContainer.getChildren().addAll(accountType, name, url, macAddressContainer, macAddressList, serialNumber, deviceId1, deviceId2, signature, username, password, httpMethodCombo, timezoneCombo, pinLevelsContainer, resolveChainAndDeepRedirectsCheckBox);
                 break;
             case M3U8_LOCAL:
-                formContainer.getChildren().addAll(accountType, name, m3u8Path, browserButtonM3u8Path, pinToTopCheckBox, resolveChainAndDeepRedirectsCheckBox);
+                formContainer.getChildren().addAll(accountType, name, m3u8Path, browserButtonM3u8Path, pinLevelsContainer, resolveChainAndDeepRedirectsCheckBox);
                 break;
             case M3U8_URL:
             case RSS_FEED:
-                formContainer.getChildren().addAll(accountType, name, m3u8Path, epg, pinToTopCheckBox, resolveChainAndDeepRedirectsCheckBox);
+                formContainer.getChildren().addAll(accountType, name, m3u8Path, epg, pinLevelsContainer, resolveChainAndDeepRedirectsCheckBox);
                 break;
             case XTREME_API:
-                formContainer.getChildren().addAll(accountType, name, m3u8Path, xtremeUsernameContainer, password, epg, pinToTopCheckBox, resolveChainAndDeepRedirectsCheckBox);
+                formContainer.getChildren().addAll(accountType, name, m3u8Path, xtremeUsernameContainer, password, epg, pinLevelsContainer, resolveChainAndDeepRedirectsCheckBox);
                 break;
         }
 
@@ -607,7 +642,7 @@ public class ManageAccountUI extends VBox {
         macAddress.setValue(null);
         macAddress.setPromptText(I18n.tr(PRIMARY_MAC_ADDRESS_HINT_KEY));
         accountType.setValue(STALKER_PORTAL.getDisplay());
-        pinToTopCheckBox.setSelected(false);
+        selectPinLevel(0);
         resolveChainAndDeepRedirectsCheckBox.setSelected(false);
         httpMethodCombo.setValue("GET");
         timezoneCombo.setValue(DEFAULT_TIMEZONE);
@@ -1046,7 +1081,8 @@ public class ManageAccountUI extends VBox {
         }
         Account account = new Account(name.getText(), resolvedUsername, password.getText(), url.getText(),
                 macAddress.getValue() != null ? macAddress.getValue() : "", macAddressList.getText(), serialNumber.getText(), deviceId1.getText(), deviceId2.getText(), signature.getText(),
-                resolvedType, epg.getText(), m3u8Path.getText(), pinToTopCheckBox.isSelected());
+                resolvedType, epg.getText(), m3u8Path.getText(), selectedPinLevel() > 0);
+        account.setPinLevel(selectedPinLevel());
         if (accountId != null) {
             account.setDbId(accountId);
         }
@@ -1173,7 +1209,7 @@ public class ManageAccountUI extends VBox {
         signature.setText(account.getSignature());
         epg.setText(account.getEpg());
         m3u8Path.setText(account.getM3u8Path());
-        pinToTopCheckBox.setSelected(account.isPinToTop());
+        selectPinLevel(account.getPinLevel() > 0 ? account.getPinLevel() : (account.isPinToTop() ? 1 : 0));
         resolveChainAndDeepRedirectsCheckBox.setSelected(account.isResolveChainAndDeepRedirects());
         httpMethodCombo.setValue(isNotBlank(account.getHttpMethod()) ? account.getHttpMethod() : "GET");
         timezoneCombo.setValue(isNotBlank(account.getTimezone()) ? account.getTimezone() : DEFAULT_TIMEZONE);

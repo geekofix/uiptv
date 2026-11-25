@@ -55,9 +55,17 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
 3. `baseline-0.1.11` erstellt (Tag v0.1.11 + Paketbau-Skripte separiert), Nutzer hat das Paket
    installiert, alte Datenbank übernommen: **Funktioniert vollständig wie die frühere debtap-Installation.**
 
+4. **Feature „Pin 1–5“ (Version 0.1.12, in Arbeit):** 5 farbige Pin-Stufen pro Account
+   (Pin 1 = rot wie alter Pin, 2 = blau, 3 = grün, 4 = orange, 5 = violett), ersetzt die einzelne
+   „Pin Account on Top“-Checkbox durch 5 Checkboxen (nur eine aktiv). Account-Tab erhält eine
+   Tab-Leiste „All | 1–5“ (optisch wie die Kategorie-Tabs rechts); Zahlen-Reiter filtern nach
+   Pin-Farbe; Sortierung pro Reiter, Standard A–Z; alte rote Pins werden automatisch Pin 1.
+   DB: neue Spalte `Account.pinLevel` (Migration 0198).
+
 ## Aktuell offene Punkte / ToDos
 
-- [ ] Erste Feature-Wünsche des Nutzers sammeln und priorisieren (noch nicht benannt)
+- [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab (umgesetzt in 0.1.12, auf
+      Nutzer-Test wartend)
 - [x] branch protection für `baseline-0.1.11` aktiviert (2026-11-25):
       Branch per „Lock branch“ + „Do not allow bypassing the above settings“
       vollständig schreibgeschützt; dev-0.1.11 mit Standard-Einstellungen (nicht löschbar

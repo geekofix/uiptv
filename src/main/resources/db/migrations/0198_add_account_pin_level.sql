@@ -1,0 +1,1 @@
+--@add_column Account pinLevel TEXT DEFAULT '0'

@@ -106,6 +106,7 @@ public class DatabaseUtils {
                 new DataColumn("type", "TEXT"),
                 new DataColumn("serverPortalUrl", "TEXT"),
                 new DataColumn("pinToTop", "TEXT"),
+                new DataColumn("pinLevel", "TEXT"),
                 new DataColumn("resolveChainAndDeepRedirects", "TEXT"),
                 new DataColumn("httpMethod", "TEXT"),
                 new DataColumn("timezone", "TEXT")
