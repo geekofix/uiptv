@@ -545,8 +545,9 @@ public class AccountListUI extends HBox {
 
         Menu pinMenu = new Menu(I18n.tr("accountListPinMenu"));
         for (int level = 1; level <= AccountResolver.PIN_SVG_HEAD_FILLS.length; level++) {
+            final int pinLevel = level;
             MenuItem pinItem = new MenuItem(I18n.tr("autoPinLevel" + level));
-            pinItem.setOnAction(_ -> handleSetPinLevel(level));
+            pinItem.setOnAction(_ -> handleSetPinLevel(pinLevel));
             pinMenu.getItems().add(pinItem);
         }
 

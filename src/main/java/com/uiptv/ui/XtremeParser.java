@@ -24,6 +24,7 @@ import java.util.Set;
 
 import static com.uiptv.model.Account.AccountAction.series;
 import static com.uiptv.util.StringUtils.isBlank;
+import static com.uiptv.util.StringUtils.isNotBlank;
 import static com.uiptv.util.StringUtils.nullSafeEncode;
 import static com.uiptv.util.StringUtils.safeGetString;
 import static com.uiptv.widget.UIptvAlert.showErrorKey;
