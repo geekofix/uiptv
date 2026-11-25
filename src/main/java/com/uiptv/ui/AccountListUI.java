@@ -169,9 +169,9 @@ public class AccountListUI extends HBox {
         table.getTextField().setMaxWidth(Double.MAX_VALUE);
         newAccountButton.setManaged(embeddedMode);
         newAccountButton.setVisible(embeddedMode);
-        AutoGrowPaneVBox contentBox = new AutoGrowPaneVBox(5, pinTabs, sceneBox, table);
+        AutoGrowPaneVBox contentBox = new AutoGrowPaneVBox(5, sceneBox, table);
         VBox.setVgrow(contentBox, Priority.ALWAYS);
-        listView.getChildren().setAll(contentBox);
+        listView.getChildren().setAll(pinTabs, contentBox);
         if (embeddedMode) {
             initDetailView();
             embeddedContainer.getChildren().setAll(navHeader, listView);
