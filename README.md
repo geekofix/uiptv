@@ -8,9 +8,6 @@
 > It is not affiliated with or endorsed by the original author.
 > License stays MIT, see [LICENSE](LICENSE).
 
-> [!IMPORTANT]
-> **Attention!!!** Volunteers are needed for translations. [Click here](TRANSLATIONS.md).
-
 # UIPTV - A Universal IPTV Player for Windows, Linux & macOS
 [![GitHub release](https://img.shields.io/github/v/release/xixogo5105/uiptv)](https://github.com/xixogo5105/uiptv/releases)
 [![GitHub license](https://img.shields.io/github/license/xixogo5105/uiptv?branch=main)](https://github.com/xixogo5105/uiptv/blob/main/LICENSE)
