@@ -543,6 +543,13 @@ public class AccountListUI extends HBox {
         MenuItem series = new MenuItem(I18n.tr("autoSeries"));
         series.setOnAction(_ -> runSingleSelectionAction(() -> retrieveThreadedAccountCategories(row.getItem(), Account.AccountAction.series)));
 
+        Menu pinMenu = new Menu(I18n.tr("accountListPinMenu"));
+        for (int level = 1; level <= AccountResolver.PIN_SVG_HEAD_FILLS.length; level++) {
+            MenuItem pinItem = new MenuItem(I18n.tr("autoPinLevel" + level));
+            pinItem.setOnAction(_ -> handleSetPinLevel(level));
+            pinMenu.getItems().add(pinItem);
+        }
+
         MenuItem reloadCache = new MenuItem(I18n.tr("autoReloadCache"));
         reloadCache.setOnAction(_ -> handleReloadCache(row.getItem()));
 
@@ -550,7 +557,7 @@ public class AccountListUI extends HBox {
         deleteItem.getStyleClass().add("danger-menu-item");
         deleteItem.setOnAction(_ -> handleDeleteAccounts());
 
-        rowMenu.getItems().addAll(editAccount, new SeparatorMenuItem(), itv, vod, series, new SeparatorMenuItem(), reloadCache, deleteItem);
+        rowMenu.getItems().addAll(editAccount, new SeparatorMenuItem(), itv, vod, series, new SeparatorMenuItem(), pinMenu, new SeparatorMenuItem(), reloadCache, deleteItem);
 
         rowMenu.setOnShowing(_ -> {
             if (row.getItem() != null) {
@@ -574,6 +581,23 @@ public class AccountListUI extends HBox {
                 Bindings.when(row.emptyProperty())
                         .then((ContextMenu) null)
                         .otherwise(rowMenu));
+    }
+
+    private void handleSetPinLevel(int pinLevel) {
+        List<AccountItem> selectedItems = table.getSelectionModel().getSelectedItems();
+        if (selectedItems.isEmpty()) {
+            return;
+        }
+        for (AccountItem item : selectedItems) {
+            Account account = accountService.getById(item.getAccountId());
+            if (account == null) {
+                continue;
+            }
+            account.setPinLevel(pinLevel);
+            account.setPinToTop(pinLevel > 0);
+            accountService.save(account);
+        }
+        refresh();
     }
 
     private void handleReloadCache(AccountItem contextItem) {

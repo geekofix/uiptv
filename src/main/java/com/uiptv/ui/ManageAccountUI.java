@@ -630,6 +630,7 @@ public class ManageAccountUI extends VBox {
         if (onSaveCallback != null) {
             onSaveCallback.call(null);
         }
+        refreshAccountInfoAsync(accountId);
     }
 
     private Stage resolveOwnerStage() {
@@ -839,15 +840,51 @@ public class ManageAccountUI extends VBox {
         return pane;
     }
 
-    private void applyAccountInfo(AccountInfo info) {
+    private record AccountInfoCounts(int liveTv, int vod, int series, int categories) {
+    }
+
+    private AccountInfoCounts loadAccountInfoCounts(String targetAccountId) {
+        return new AccountInfoCounts(
+                com.uiptv.db.ChannelDb.get().getChannelCountForAccount(targetAccountId),
+                com.uiptv.db.VodChannelDb.get().getChannelCountForAccount(targetAccountId),
+                com.uiptv.db.SeriesChannelDb.get().getChannelCountForAccount(targetAccountId),
+                com.uiptv.db.CategoryDb.get().getCategoryCountForAccount(targetAccountId)
+        );
+    }
+
+    private void refreshAccountInfoAsync(String targetAccountId) {
+        if (isBlank(targetAccountId)) {
+            clearAccountInfoFields();
+            ensureAccountInfoSectionVisibility(getAccountTypeByDisplay(accountType.getValue()));
+            return;
+        }
+        clearAccountInfoFields();
+        Task<List<Object>> task = new Task<>() {
+            @Override
+            protected List<Object> call() {
+                AccountInfo info = accountInfoService.getByAccountId(targetAccountId);
+                return List.of(info, loadAccountInfoCounts(targetAccountId));
+            }
+        };
+        task.setOnSucceeded(event -> {
+            if (!java.util.Objects.equals(targetAccountId, accountId)) {
+                return;
+            }
+            List<Object> result = task.getValue();
+            applyAccountInfo((AccountInfo) result.get(0), (AccountInfoCounts) result.get(1));
+        });
+        new Thread(task).start();
+    }
+
+    private void applyAccountInfo(AccountInfo info, AccountInfoCounts counts) {
         String profileJson = info != null ? safeText(info.getProfileJson()) : "";
         accountInfoHasProfileJson = isNotBlank(profileJson);
         if (!accountInfoHasProfileJson) {
             clearAccountInfoFields();
-            setAccountInfoCountValue(accountInfoLiveTvRow, accountInfoLiveTv, com.uiptv.db.ChannelDb.get().getChannelCountForAccount(accountId));
-            setAccountInfoCountValue(accountInfoVodRow, accountInfoVod, com.uiptv.db.VodChannelDb.get().getChannelCountForAccount(accountId));
-            setAccountInfoCountValue(accountInfoSeriesRow, accountInfoSeries, com.uiptv.db.SeriesChannelDb.get().getChannelCountForAccount(accountId));
-            setAccountInfoCountValue(accountInfoCategoriesRow, accountInfoCategories, com.uiptv.db.CategoryDb.get().getCategoryCountForAccount(accountId));
+            setAccountInfoCountValue(accountInfoLiveTvRow, accountInfoLiveTv, counts.liveTv());
+            setAccountInfoCountValue(accountInfoVodRow, accountInfoVod, counts.vod());
+            setAccountInfoCountValue(accountInfoSeriesRow, accountInfoSeries, counts.series());
+            setAccountInfoCountValue(accountInfoCategoriesRow, accountInfoCategories, counts.categories());
             ensureAccountInfoSectionVisibility(getAccountTypeByDisplay(accountType.getValue()));
             return;
         }
@@ -873,10 +910,10 @@ public class ManageAccountUI extends VBox {
         setAccountInfoValue(accountInfoTariffNameRow, accountInfoTariffName, info != null ? safeText(info.getTariffName()) : "");
         setAccountInfoValue(accountInfoTariffPlanRow, accountInfoTariffPlan, info != null ? safeText(info.getTariffPlan()) : "");
         setAccountInfoValue(accountInfoDefaultTimezoneRow, accountInfoDefaultTimezone, info != null ? safeText(info.getDefaultTimezone()) : "");
-        setAccountInfoCountValue(accountInfoLiveTvRow, accountInfoLiveTv, com.uiptv.db.ChannelDb.get().getChannelCountForAccount(accountId));
-        setAccountInfoCountValue(accountInfoVodRow, accountInfoVod, com.uiptv.db.VodChannelDb.get().getChannelCountForAccount(accountId));
-        setAccountInfoCountValue(accountInfoSeriesRow, accountInfoSeries, com.uiptv.db.SeriesChannelDb.get().getChannelCountForAccount(accountId));
-        setAccountInfoCountValue(accountInfoCategoriesRow, accountInfoCategories, com.uiptv.db.CategoryDb.get().getCategoryCountForAccount(accountId));
+        setAccountInfoCountValue(accountInfoLiveTvRow, accountInfoLiveTv, counts.liveTv());
+        setAccountInfoCountValue(accountInfoVodRow, accountInfoVod, counts.vod());
+        setAccountInfoCountValue(accountInfoSeriesRow, accountInfoSeries, counts.series());
+        setAccountInfoCountValue(accountInfoCategoriesRow, accountInfoCategories, counts.categories());
         setAccountInfoProfileJson(profileJson);
         ensureAccountInfoSectionVisibility(getAccountTypeByDisplay(accountType.getValue()));
     }
@@ -1252,7 +1289,7 @@ public class ManageAccountUI extends VBox {
         if (account.getType() == AccountType.XTREME_API) {
             Platform.runLater(() -> loadXtremeCredentialsFromAccount(account));
         }
-        applyAccountInfo(accountInfoService.getByAccountId(accountId));
+        refreshAccountInfoAsync(accountId);
         ensureAccountInfoSectionVisibility(account.getType());
         updateButtonState();
     }

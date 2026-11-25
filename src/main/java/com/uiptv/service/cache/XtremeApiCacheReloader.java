@@ -24,6 +24,7 @@ import static com.uiptv.util.StringUtils.isNotBlank;
 public class XtremeApiCacheReloader extends AbstractAccountCacheReloader {
     @Override
     public void reloadCache(Account account, LoggerCallback logger) {
+        XtremeParser.refreshAccountInfo(account);
         if (isVodOrSeriesAction(account)) {
             reloadVodOrSeriesCategories(account, logger);
             return;

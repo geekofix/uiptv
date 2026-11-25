@@ -49,7 +49,6 @@ public abstract class BaseMainApplicationUI {
         AccountListUI accountListUI = new AccountListUI(useEmbeddedAccountFlow());
         BookmarkChannelListUI bookmarkChannelListUI = new BookmarkChannelListUI();
         AtomicReference<WatchingNowUI> watchingNowRef = new AtomicReference<>();
-        AtomicReference<AccountInfoUI> accountInfoRef = new AtomicReference<>();
         setMinWidthForPane(bookmarkChannelListUI);
         setMinWidthForPane(accountListUI);
 
@@ -57,7 +56,6 @@ public abstract class BaseMainApplicationUI {
 
         Tab manageAccountTab = new Tab(I18n.tr("autoAccount"),
                 useEmbeddedAccountFlow() ? wrapToFill(accountListUI) : createDeferredPlaceholder());
-        Tab accountInfoTab = new Tab(I18n.tr("autoAccountInfo"), createDeferredPlaceholder());
         Tab parseMultipleAccountTab = new Tab(I18n.tr("autoImportBulkAccounts"), createDeferredPlaceholder());
         Tab bookmarkChannelListTab = new Tab(I18n.tr("autoFavorite"), bookmarkChannelListUI);
         Tab watchingNowTab = new Tab(I18n.tr("autoWatchingNow"), createDeferredPlaceholder());
@@ -66,12 +64,6 @@ public abstract class BaseMainApplicationUI {
 
         tabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
             LogDisplayUI.setLoggingEnabled(newTab == logDisplayTab);
-            if (newTab == accountInfoTab) {
-                AccountInfoUI accountInfoUI = accountInfoRef.get();
-                if (accountInfoUI != null) {
-                    accountInfoUI.refresh();
-                }
-            }
             if (newTab == watchingNowTab) {
                 WatchingNowUI watchingNowUI = watchingNowRef.get();
                 if (watchingNowUI != null) {
@@ -80,7 +72,7 @@ public abstract class BaseMainApplicationUI {
             }
         });
 
-        tabPane.getTabs().addAll(configurationTab, manageAccountTab, accountInfoTab, parseMultipleAccountTab, logDisplayTab, watchingNowTab, bookmarkChannelListTab);
+        tabPane.getTabs().addAll(configurationTab, manageAccountTab, parseMultipleAccountTab, logDisplayTab, watchingNowTab, bookmarkChannelListTab);
         tabPane.getSelectionModel().select(bookmarkChannelListTab);
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabPane.setSide(Side.LEFT);
@@ -100,14 +92,12 @@ public abstract class BaseMainApplicationUI {
         initializeDeferredTabs(new DeferredTabsContext(
                 configurationTab,
                 manageAccountTab,
-                accountInfoTab,
                 parseMultipleAccountTab,
                 logDisplayTab,
                 watchingNowTab,
                 accountListUI,
                 bookmarkChannelListUI,
-                watchingNowRef,
-                accountInfoRef
+                watchingNowRef
         ));
         return scene;
     }
@@ -181,15 +171,6 @@ public abstract class BaseMainApplicationUI {
 
     private void initializeDeferredTabs(DeferredTabsContext context) {
         Supplier<WatchingNowUI> watchingNowSupplier = context.watchingNowRef()::get;
-        Runnable loadAccountInfo = () -> {
-            AccountInfoUI accountInfoUI = new AccountInfoUI();
-            setMinWidthForPane(accountInfoUI);
-            accountInfoUI.registerListeners();
-            context.accountInfoRef().set(accountInfoUI);
-            accountInfoUI.refresh();
-            context.accountInfoTab().setContent(accountInfoUI);
-        };
-
         Runnable loadWatchingNow = () -> {
             WatchingNowUI watchingNowUI = new WatchingNowUI();
             setMinWidthForPane(watchingNowUI);
@@ -246,10 +227,9 @@ public abstract class BaseMainApplicationUI {
 
         scheduleDeferredTabLoad(loadConfiguration,
                 () -> scheduleDeferredTabLoad(loadManageAccount,
-                        () -> scheduleDeferredTabLoad(loadAccountInfo,
-                                () -> scheduleDeferredTabLoad(loadParseMultiple,
-                                        () -> scheduleDeferredTabLoad(loadLogDisplay,
-                                                () -> scheduleDeferredTabLoad(loadWatchingNow, null))))));
+                        () -> scheduleDeferredTabLoad(loadParseMultiple,
+                                () -> scheduleDeferredTabLoad(loadLogDisplay,
+                                        () -> scheduleDeferredTabLoad(loadWatchingNow, null)))));
     }
 
     private void scheduleDeferredTabLoad(Runnable loader, Runnable nextStep) {
@@ -354,14 +334,12 @@ public abstract class BaseMainApplicationUI {
     private record DeferredTabsContext(
             Tab configurationTab,
             Tab manageAccountTab,
-            Tab accountInfoTab,
             Tab parseMultipleAccountTab,
             Tab logDisplayTab,
             Tab watchingNowTab,
             AccountListUI accountListUI,
             BookmarkChannelListUI bookmarkChannelListUI,
-            AtomicReference<WatchingNowUI> watchingNowRef,
-            AtomicReference<AccountInfoUI> accountInfoRef
+            AtomicReference<WatchingNowUI> watchingNowRef
     ) {
     }
 }

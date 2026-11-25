@@ -63,19 +63,28 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    DB: neue Spalte `Account.pinLevel` (Migration 0198).
 
 5. **Feature „Standard-Importnamen + Account Info" (Version 0.1.13):** Importe heißen künftig
-   `name (0001)` (Leerzeichen, vierstellig, beide Protokolle); alte Namensschemata (name(N)/name (N))
-   werden beim App-Start automatisch auf das neue Schema umgeschrieben (per `AccountDb.updateAccountName`,
-   NICHT über `save()`, da dieses anhand des Namens prüft). Neuer Hauptreiter „Account Info" zwischen
-   Account und Import Bulk Accounts: Tabelle mit Status, Ablaufdatum und Live/VOD/Serien-Zählung je
-   Account, direkt aus der DB gelesen (aktualisiert sich mit jedem Cache-Reload). Umbenennung erfolgt NICHT
-   mehr automatisch beim Start, sondern manuell per Terminal-Befehl `uiptv -names` (mit Fortschrittsanzeige
-   und Restzeitschätzung; beendet sich ohne GUI-Start). Auf Nutzer-Test wartend.
+   `name (0001)` (Leerzeichen, vierstellig, beide Protokolle). Umbenennung erfolgt NICHT mehr automatisch
+   beim Start, sondern manuell per Terminal-Befehl `uiptv -names` (mit Fortschrittsanzeige; beendet sich
+   ohne GUI-Start).
+   Update 2026-11-26: Der eigene Hauptreiter „Account Info" wurde WIEDER ENTFERNT (Nutzer-Wunsch); die
+   Infos stehen nur noch im Account-Tab unten im „Kontoinformationen"-Panel. Account-Daten (Status,
+   Ablaufdatum, Profil-JSON) werden NUR beim Import bzw. Cache-Reload abgerufen und in der DB
+   (`AccountInfo`) gecacht — NIEMALS beim bloßen Anklicken eines Accounts. Das Panel liest nur aus
+   der DB; die vier Zählwerte (Live/VOD/Serien/Kategorien) werden pro Klick im Hintergrund-Thread
+   gezählt (kein UI-Ruckeln mehr). Für Xtream ruft der Cache-Reload jetzt zusätzlich einmal `player_api`
+   (user_info) ab und speichert Ablaufdatum (exp_date) + Status + Profil-JSON — damit steht auch für
+   Xtream das Expiry Date im Panel.
 
 6. **Channel-Liste: Tooltip + horizontales Scrollen (Version 0.1.13, TEST):** In der Senderliste
    (ganz rechts) zeigt ein Tooltip bei Maus-Berührung den vollständigen Sendernamen (max ~420px breit,
    mit Umbruch); zusätzlich kann die Spalte bei langen Namen horizontal scrollen (UNCONSTRAINED-Resize-
    Policy, Spaltenbreite automatisch nach Inhalt). Beides ist NEU und VOM NUTZER NOCH NICHT BEWERTET:
    Er entscheidet, ob Tooltip, Scrollen oder beides bleibt — ggf. wieder entfernen bzw. nur eines behalten!
+
+7. **Kontextmenü „Pin“ in der Account-Liste (Version 0.1.13):** Rechtsklick auf markierte Accounts
+   (Mehrfachauswahl möglich) → Menü „Pin“ → „Pin 1“ bis „Pin 5“: alle markierten Accounts erhalten die
+   gewählte Pin-Stufe. Notwendig, weil bei Mehrfachauswahl im Account-Tab nur der zuerst angeklickte
+   Account im Formular erscheint.
 
 ## Aktuell offene Punkte / ToDos
 

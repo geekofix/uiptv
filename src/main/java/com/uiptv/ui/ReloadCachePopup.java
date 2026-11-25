@@ -928,7 +928,7 @@ public class ReloadCachePopup extends VBox {
     }
 
     private void refreshAccountInfoTitle(Account account) {
-        if (account == null || account.getType() != AccountType.STALKER_PORTAL) {
+        if (account == null) {
             return;
         }
         if (account.getDbId() == null || account.getDbId().isBlank()) {

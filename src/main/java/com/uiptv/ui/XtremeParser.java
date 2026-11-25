@@ -1,8 +1,11 @@
 package com.uiptv.ui;
 
 import com.uiptv.model.Account;
+import com.uiptv.model.AccountInfo;
+import com.uiptv.model.AccountStatus;
 import com.uiptv.model.Category;
 import com.uiptv.model.Channel;
+import com.uiptv.service.AccountInfoService;
 import com.uiptv.shared.Episode;
 import com.uiptv.shared.EpisodeList;
 import com.uiptv.shared.SeasonInfo;
@@ -30,6 +33,38 @@ public class XtremeParser {
     private static final String XTREME_ERROR_PROCESSING_RESPONSE_DATA = "xtremeErrorProcessingResponseData";
 
     private XtremeParser() {
+    }
+
+    public static void refreshAccountInfo(Account account) {
+        if (account == null || isBlank(account.getDbId())) {
+            return;
+        }
+        try {
+            String json = fetchPlayerApi(account, "", null);
+            JSONObject userInfo = new JSONObject(json).optJSONObject("user_info");
+            if (userInfo == null) {
+                return;
+            }
+            AccountInfo info = AccountInfoService.getInstance().getByAccountId(account.getDbId());
+            if (info == null) {
+                info = new AccountInfo();
+                info.setAccountId(account.getDbId());
+            }
+            String expDate = userInfo.optString("exp_date", "");
+            if (isBlank(expDate) || "null".equals(expDate) || "0".equals(expDate)) {
+                info.setExpireDate(null);
+            } else {
+                info.setExpireDate(expDate);
+            }
+            String status = userInfo.optString("status", "");
+            if (isNotBlank(status) && !"null".equals(status)) {
+                info.setAccountStatus(AccountStatus.fromValue(status));
+            }
+            info.setProfileJson(json);
+            AccountInfoService.getInstance().save(info);
+        } catch (Exception _) {
+            // Account info is a bonus on top of the cache reload; never fail the reload for it.
+        }
     }
 
     public static List<Category> parseCategories(Account account) {
