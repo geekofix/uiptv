@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - baseline-0.1.11
+      - dev-0.1.11
   workflow_dispatch:
 
 env:
