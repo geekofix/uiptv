@@ -69,8 +69,8 @@ Java 25 or later is required.
 
 | Branch | Meaning |
 |---|---|
-| `baseline-0.1.11` | Immutable base: exact upstream tag `v0.1.11` plus packaging scripts |
-| `dev-0.1.11` | Working branch for all fixes and features |
+| `baseline-0.1.11` | Immutable base (branch-protected): exact upstream tag `v0.1.11` plus packaging scripts |
+| `dev-0.1.11` | Default branch; working branch for all fixes and features |
 | `main` | Untouched upstream reference (1.1.1 redesign) |
 
 ## Versioning
