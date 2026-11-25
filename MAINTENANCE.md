@@ -21,7 +21,7 @@ neue Features, kleine Code-Verbesserungen, Bugfixes.
 | Branch | Rolle | Regel |
 |---|---|---|
 | `baseline-0.1.11` | **BASIS** — exakt Tag `v0.1.11` (Commit `20660bf`) plus nur die pacman-Bau-Skripte | **Darf nie überschrieben, gelöscht oder inhaltlich verändert werden.** Keine Feature-Commits hier. |
-| `dev-0.1.11` | **Arbeitsbranch** — alle Weiterentwicklungen | Features/Fixes hier committen; basiert auf `baseline-0.1.11` |
+| `dev-0.1.11` | **Standard- und Arbeitsbranch** — alle Weiterentwicklungen | Features/Fixes hier committen; basiert auf `baseline-0.1.11` |
 | `main` | Upstream-Zustand (1.1.1, neues Design) | Nur Referenz. Nicht anfassen. |
 
 Gelöschte Altlasten (2026-11-25): `legacy` und `legacy-dev` (Upstream-Legacy-Linie). Sie zeigten auf
