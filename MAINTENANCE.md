@@ -62,6 +62,13 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    Pin-Farbe; Sortierung pro Reiter, Standard A–Z; alte rote Pins werden automatisch Pin 1.
    DB: neue Spalte `Account.pinLevel` (Migration 0198).
 
+5. **Feature „Standard-Importnamen + Account Info" (Version 0.1.13):** Importe heißen künftig
+   `name (0001)` (Leerzeichen, vierstellig, beide Protokolle); alte Namensschemata (name(N)/name (N))
+   werden beim App-Start automatisch auf das neue Schema umgeschrieben (per `AccountDb.updateAccountName`,
+   NICHT über `save()`, da dieses anhand des Namens prüft). Neuer Hauptreiter „Account Info" zwischen
+   Account und Import Bulk Accounts: Tabelle mit Status, Ablaufdatum und Live/VOD/Serien-Zählung je
+   Account, direkt aus der DB gelesen (aktualisiert sich mit jedem Cache-Reload). Auf Nutzer-Test wartend.
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,
