@@ -64,8 +64,11 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
 
 ## Aktuell offene Punkte / ToDos
 
-- [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab (umgesetzt in 0.1.12, auf
-      Nutzer-Test wartend)
+- [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,
+      vom Nutzer bestätigt (inkl. Fix: Pin-Reiterleiste bleibt beim Öffnen eines Accounts sichtbar)
+- [x] Doku-Runde: README für den Fork neu geschrieben (Credit an Original-Autor/SPC, Hinweis auf
+      die optisch andere Upstream-1.x-Linie, eigene Install-/Build-/Branch-Abschnitte);
+      LICENSE um eigene Copyright-Zeile ergänzt; Upstream-Übersetzungs-Aufruf entfernt
 - [x] branch protection für `baseline-0.1.11` aktiviert (2026-11-25):
       Branch per „Lock branch“ + „Do not allow bypassing the above settings“
       vollständig schreibgeschützt; dev-0.1.11 mit Standard-Einstellungen (nicht löschbar
