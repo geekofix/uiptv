@@ -58,8 +58,11 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
 ## Aktuell offene Punkte / ToDos
 
 - [ ] Erste Feature-Wünsche des Nutzers sammeln und priorisieren (noch nicht benannt)
-- [ ] Empfohlen: branch protection für `baseline-0.1.11` aktivieren
-      (Settings → Branches → Regel: kein Force-Push, kein Löschen) — muss der Nutzer selbst klicken
+- [x] branch protection für `baseline-0.1.11` aktiviert (2026-11-25):
+      Branch per „Lock branch“ + „Do not allow bypassing the above settings“
+      vollständig schreibgeschützt; dev-0.1.11 mit Standard-Einstellungen (nicht löschbar
+      über UI-Regel abgedeckt, Force-Push nicht erlaubt).
+      BITTE: nichts an dieser Konfiguration ändern.
 - [ ] Repo ist ein öffentlicher Fork; Privatstellung nur über GitHub-Support („detach fork") möglich —
       bewusst vorerst akzeptiert (Nutzer-Entscheidung, „Option 2")
 - [ ] Artifact-Aufbewahrung aktuell 1 Tag — auf Wunsch erhöhen
