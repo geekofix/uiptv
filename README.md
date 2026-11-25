@@ -1,12 +1,20 @@
 # UIPTV (Legacy Line) — geekofix fork
 
 > [!NOTE]
-> **Fork notice:** This repository is a personal test project based on
-> [xixogo5105/uiptv](https://github.com/xixogo5105/uiptv) (upstream author: SPC).
-> It continues the **legacy 0.1.11 UI line** with own fixes and features instead of
-> the redesigned 1.x versions. Development is supported by
-> [Mistral AI](https://mistral.ai) (Vibe Code).
-> It is not affiliated with or endorsed by the original author.
+> **Fork notice — please read:** This repository is a personal test project and a
+> fork of [xixogo5105/uiptv](https://github.com/xixogo5105/uiptv). **All credit for
+> the original application goes to the upstream author (SPC)**, who continues to
+> develop the project on GitHub with a completely redesigned user interface
+> (versions 1.0 and newer).
+>
+> **This fork is not that version.** It is based on the classic interface of the
+> original **Release 11 (v0.1.11)** and continues that legacy line with own fixes
+> and features — intentionally close to the original look and feel, not the 1.x
+> redesign. If you come from the upstream project and something looks different
+> here, that is why.
+>
+> Development is supported by [Mistral AI](https://mistral.ai) (Vibe Code).
+> This project is not affiliated with or endorsed by the original author.
 > License stays MIT, see [LICENSE](LICENSE).
 
 UIPTV is a universal IPTV player written in Java for Windows, Linux, and macOS.
