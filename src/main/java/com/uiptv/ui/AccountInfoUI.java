@@ -43,6 +43,7 @@ public class AccountInfoUI extends VBox {
     private final TableView<AccountInfoRow> table = new TableView<>();
     private final ObservableList<AccountInfoRow> rows = FXCollections.observableArrayList();
     private final AccountChangeListener accountChangeListener = _ -> Platform.runLater(this::refresh);
+    private final java.util.concurrent.atomic.AtomicBoolean refreshInProgress = new java.util.concurrent.atomic.AtomicBoolean(false);
 
     public AccountInfoUI() {
         setSpacing(5);
@@ -74,6 +75,25 @@ public class AccountInfoUI extends VBox {
     }
 
     public void refresh() {
+        if (refreshInProgress.getAndSet(true)) {
+            return;
+        }
+        Thread worker = new Thread(() -> {
+            try {
+                List<AccountInfoRow> newRows = collectRows();
+                Platform.runLater(() -> {
+                    rows.setAll(newRows);
+                    refreshInProgress.set(false);
+                });
+            } catch (Exception e) {
+                refreshInProgress.set(false);
+            }
+        }, "account-info-refresh");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    private List<AccountInfoRow> collectRows() {
         List<AccountInfoRow> newRows = new ArrayList<>();
         for (Account account : AccountDb.get().getAccounts()) {
             String accountName = account.getAccountName() == null ? "" : account.getAccountName();
@@ -93,7 +113,7 @@ public class AccountInfoUI extends VBox {
             ));
         }
         newRows.sort(ROW_ORDER);
-        rows.setAll(newRows);
+        return newRows;
     }
 
     private static String numberOrDash(int count) {

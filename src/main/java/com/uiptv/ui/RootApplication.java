@@ -170,11 +170,15 @@ public class RootApplication extends Application {
         ServerUrlUtil.setHostServices(getHostServices());
         Configuration bootConfiguration = configurationService.read();
         I18n.initialize(bootConfiguration == null ? null : bootConfiguration.getLanguageLocale());
-        try {
-            AccountNameFormats.normalizeExistingAccountNames();
-        } catch (Exception e) {
-            AppLog.addErrorLog(RootApplication.class, "Account name normalization failed: " + e.getMessage());
-        }
+        Thread nameNormalizer = new Thread(() -> {
+            try {
+                AccountNameFormats.normalizeExistingAccountNames();
+            } catch (Exception e) {
+                AppLog.addErrorLog(RootApplication.class, "Account name normalization failed: " + e.getMessage());
+            }
+        }, "account-name-normalizer");
+        nameNormalizer.setDaemon(true);
+        nameNormalizer.start();
 
         boolean embeddedEnabled = bootConfiguration != null && bootConfiguration.isEmbeddedPlayer();
         boolean embeddedWideViewEnabled = EmbeddedPlayerWideViewUtil.isWideViewEnabled();
