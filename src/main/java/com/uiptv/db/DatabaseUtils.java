@@ -128,7 +128,11 @@ public class DatabaseUtils {
                 new DataColumn("accountPagePasswordHash", "TEXT"),
                 new DataColumn("allowedStbTypesJson", "TEXT"),
                 new DataColumn("allowedStbTypesForLocalRecordingJson", "TEXT"),
-                new DataColumn("preferredStbType", "TEXT")
+                new DataColumn("preferredStbType", "TEXT"),
+                new DataColumn("liveCount", "INTEGER DEFAULT '-1'"),
+                new DataColumn("vodCount", "INTEGER DEFAULT '-1'"),
+                new DataColumn("seriesCount", "INTEGER DEFAULT '-1'"),
+                new DataColumn("categoriesCount", "INTEGER DEFAULT '-1'")
         )));
         dbStructure.put(DbTable.BOOKMARK_TABLE.getTableName(), new ArrayList<>(Arrays.asList(
                 new DataColumn("id", INTEGER_PRIMARY_KEY),

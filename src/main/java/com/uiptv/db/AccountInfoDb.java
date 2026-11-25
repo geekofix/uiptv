@@ -48,7 +48,24 @@ public class AccountInfoDb extends BaseDb {
         info.setAllowedStbTypesJson(nullSafeString(resultSet, "allowedStbTypesJson"));
         info.setAllowedStbTypesForLocalRecordingJson(nullSafeString(resultSet, "allowedStbTypesForLocalRecordingJson"));
         info.setPreferredStbType(nullSafeString(resultSet, "preferredStbType"));
+        info.setLiveCount(nullSafeInteger(resultSet, "liveCount"));
+        info.setVodCount(nullSafeInteger(resultSet, "vodCount"));
+        info.setSeriesCount(nullSafeInteger(resultSet, "seriesCount"));
+        info.setCategoriesCount(nullSafeInteger(resultSet, "categoriesCount"));
         return info;
+    }
+
+    private Integer nullSafeInteger(ResultSet resultSet, String column) {
+        try {
+            String value = resultSet.getString(column);
+            return isBlank(value) ? null : Integer.parseInt(value.trim());
+        } catch (Exception _) {
+            return null;
+        }
+    }
+
+    private String integerToString(Integer value) {
+        return value == null ? null : String.valueOf(value);
     }
 
     public AccountInfo getByAccountId(String accountId) {
@@ -103,6 +120,10 @@ public class AccountInfoDb extends BaseDb {
             statement.setString(14, info.getAllowedStbTypesJson());
             statement.setString(15, info.getAllowedStbTypesForLocalRecordingJson());
             statement.setString(16, info.getPreferredStbType());
+            statement.setString(17, integerToString(info.getLiveCount()));
+            statement.setString(18, integerToString(info.getVodCount()));
+            statement.setString(19, integerToString(info.getSeriesCount()));
+            statement.setString(20, integerToString(info.getCategoriesCount()));
             statement.execute();
         } catch (SQLException e) {
             throw new DatabaseAccessException("Unable to execute query", e);
@@ -114,6 +135,7 @@ public class AccountInfoDb extends BaseDb {
                 + " SET expireDate=?, accountStatus=?, accountBalance=?, tariffName=?, tariffPlan=?, defaultTimezone=?, profileJson=?,"
                 + " passHash=?, parentPasswordHash=?, passwordHash=?, settingsPasswordHash=?, accountPagePasswordHash=?"
                 + ", allowedStbTypesJson=?, allowedStbTypesForLocalRecordingJson=?, preferredStbType=?"
+                + ", liveCount=?, vodCount=?, seriesCount=?, categoriesCount=?"
                 + " WHERE accountId=?";
         try (Connection conn = connect(); PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, info.getExpireDate());
@@ -131,7 +153,11 @@ public class AccountInfoDb extends BaseDb {
             statement.setString(13, info.getAllowedStbTypesJson());
             statement.setString(14, info.getAllowedStbTypesForLocalRecordingJson());
             statement.setString(15, info.getPreferredStbType());
-            statement.setString(16, info.getAccountId());
+            statement.setString(16, integerToString(info.getLiveCount()));
+            statement.setString(17, integerToString(info.getVodCount()));
+            statement.setString(18, integerToString(info.getSeriesCount()));
+            statement.setString(19, integerToString(info.getCategoriesCount()));
+            statement.setString(20, info.getAccountId());
             statement.execute();
         } catch (SQLException e) {
             throw new DatabaseAccessException("Unable to update account info", e);

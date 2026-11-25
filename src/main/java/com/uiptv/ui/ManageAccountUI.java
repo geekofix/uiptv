@@ -840,18 +840,6 @@ public class ManageAccountUI extends VBox {
         return pane;
     }
 
-    private record AccountInfoCounts(int liveTv, int vod, int series, int categories) {
-    }
-
-    private AccountInfoCounts loadAccountInfoCounts(String targetAccountId) {
-        return new AccountInfoCounts(
-                com.uiptv.db.ChannelDb.get().getChannelCountForAccount(targetAccountId),
-                com.uiptv.db.VodChannelDb.get().getChannelCountForAccount(targetAccountId),
-                com.uiptv.db.SeriesChannelDb.get().getChannelCountForAccount(targetAccountId),
-                com.uiptv.db.CategoryDb.get().getCategoryCountForAccount(targetAccountId)
-        );
-    }
-
     private void refreshAccountInfoAsync(String targetAccountId) {
         if (isBlank(targetAccountId)) {
             clearAccountInfoFields();
@@ -859,32 +847,34 @@ public class ManageAccountUI extends VBox {
             return;
         }
         clearAccountInfoFields();
-        Task<List<Object>> task = new Task<>() {
+        Task<AccountInfo> task = new Task<>() {
             @Override
-            protected List<Object> call() {
-                AccountInfo info = accountInfoService.getByAccountId(targetAccountId);
-                return List.of(info, loadAccountInfoCounts(targetAccountId));
+            protected AccountInfo call() {
+                return accountInfoService.getByAccountId(targetAccountId);
             }
         };
         task.setOnSucceeded(event -> {
             if (!java.util.Objects.equals(targetAccountId, accountId)) {
                 return;
             }
-            List<Object> result = task.getValue();
-            applyAccountInfo((AccountInfo) result.get(0), (AccountInfoCounts) result.get(1));
+            applyAccountInfo(task.getValue());
         });
         new Thread(task).start();
     }
 
-    private void applyAccountInfo(AccountInfo info, AccountInfoCounts counts) {
+    private int displayCount(Integer value) {
+        return value == null || value < 0 ? -1 : value;
+    }
+
+    private void applyAccountInfo(AccountInfo info) {
         String profileJson = info != null ? safeText(info.getProfileJson()) : "";
         accountInfoHasProfileJson = isNotBlank(profileJson);
         if (!accountInfoHasProfileJson) {
             clearAccountInfoFields();
-            setAccountInfoCountValue(accountInfoLiveTvRow, accountInfoLiveTv, counts.liveTv());
-            setAccountInfoCountValue(accountInfoVodRow, accountInfoVod, counts.vod());
-            setAccountInfoCountValue(accountInfoSeriesRow, accountInfoSeries, counts.series());
-            setAccountInfoCountValue(accountInfoCategoriesRow, accountInfoCategories, counts.categories());
+            setAccountInfoCountValue(accountInfoLiveTvRow, accountInfoLiveTv, displayCount(info == null ? null : info.getLiveCount()));
+            setAccountInfoCountValue(accountInfoVodRow, accountInfoVod, displayCount(info == null ? null : info.getVodCount()));
+            setAccountInfoCountValue(accountInfoSeriesRow, accountInfoSeries, displayCount(info == null ? null : info.getSeriesCount()));
+            setAccountInfoCountValue(accountInfoCategoriesRow, accountInfoCategories, displayCount(info == null ? null : info.getCategoriesCount()));
             ensureAccountInfoSectionVisibility(getAccountTypeByDisplay(accountType.getValue()));
             return;
         }
@@ -910,10 +900,10 @@ public class ManageAccountUI extends VBox {
         setAccountInfoValue(accountInfoTariffNameRow, accountInfoTariffName, info != null ? safeText(info.getTariffName()) : "");
         setAccountInfoValue(accountInfoTariffPlanRow, accountInfoTariffPlan, info != null ? safeText(info.getTariffPlan()) : "");
         setAccountInfoValue(accountInfoDefaultTimezoneRow, accountInfoDefaultTimezone, info != null ? safeText(info.getDefaultTimezone()) : "");
-        setAccountInfoCountValue(accountInfoLiveTvRow, accountInfoLiveTv, counts.liveTv());
-        setAccountInfoCountValue(accountInfoVodRow, accountInfoVod, counts.vod());
-        setAccountInfoCountValue(accountInfoSeriesRow, accountInfoSeries, counts.series());
-        setAccountInfoCountValue(accountInfoCategoriesRow, accountInfoCategories, counts.categories());
+        setAccountInfoCountValue(accountInfoLiveTvRow, accountInfoLiveTv, displayCount(info.getLiveCount()));
+        setAccountInfoCountValue(accountInfoVodRow, accountInfoVod, displayCount(info.getVodCount()));
+        setAccountInfoCountValue(accountInfoSeriesRow, accountInfoSeries, displayCount(info.getSeriesCount()));
+        setAccountInfoCountValue(accountInfoCategoriesRow, accountInfoCategories, displayCount(info.getCategoriesCount()));
         setAccountInfoProfileJson(profileJson);
         ensureAccountInfoSectionVisibility(getAccountTypeByDisplay(accountType.getValue()));
     }

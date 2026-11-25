@@ -8,6 +8,10 @@ import com.uiptv.service.AccountService;
 import com.uiptv.service.AccountInfoService;
 import com.uiptv.service.CacheService;
 import com.uiptv.service.CacheServiceImpl;
+import com.uiptv.db.CategoryDb;
+import com.uiptv.db.ChannelDb;
+import com.uiptv.db.SeriesChannelDb;
+import com.uiptv.db.VodChannelDb;
 import com.uiptv.util.AccountType;
 import com.uiptv.widget.ProminentButton;
 import com.uiptv.widget.SegmentedProgressBar;
@@ -494,6 +498,7 @@ public class ReloadCachePopup extends VBox {
             logMessage(account, LOG_RELOAD_FAILED_PREFIX + " " + shortFailure(e.getMessage()));
             addIssue(accountIssues, I18n.tr("reloadFailedReason", shortFailure(e.getMessage())));
         } finally {
+            persistAccountInfoCounts(account);
             refreshAccountInfoTitle(account);
         }
         boolean criticalFailure = runOutcomeTracker.hasCriticalFailure(account.getDbId());
@@ -925,6 +930,22 @@ public class ReloadCachePopup extends VBox {
                 panel.appendLog(compact);
             }
         });
+    }
+
+    private void persistAccountInfoCounts(Account account) {
+        if (account == null || isBlank(account.getDbId())) {
+            return;
+        }
+        AccountInfo info = accountInfoService.getByAccountId(account.getDbId());
+        if (info == null) {
+            info = new AccountInfo();
+            info.setAccountId(account.getDbId());
+        }
+        info.setLiveCount(ChannelDb.get().getChannelCountForAccount(account.getDbId()));
+        info.setVodCount(VodChannelDb.get().getChannelCountForAccount(account.getDbId()));
+        info.setSeriesCount(SeriesChannelDb.get().getChannelCountForAccount(account.getDbId()));
+        info.setCategoriesCount(CategoryDb.get().getCategoryCountForAccount(account.getDbId()));
+        accountInfoService.save(info);
     }
 
     private void refreshAccountInfoTitle(Account account) {

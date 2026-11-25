@@ -1,0 +1,1 @@
+--@add_column AccountInfo vodCount INTEGER DEFAULT '-1'

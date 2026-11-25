@@ -26,4 +26,8 @@ public class AccountInfo extends BaseJson {
     private String allowedStbTypesJson;
     private String allowedStbTypesForLocalRecordingJson;
     private String preferredStbType;
+    private Integer liveCount;
+    private Integer vodCount;
+    private Integer seriesCount;
+    private Integer categoriesCount;
 }

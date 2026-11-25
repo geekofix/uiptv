@@ -70,8 +70,11 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    Infos stehen nur noch im Account-Tab unten im „Kontoinformationen"-Panel. Account-Daten (Status,
    Ablaufdatum, Profil-JSON) werden NUR beim Import bzw. Cache-Reload abgerufen und in der DB
    (`AccountInfo`) gecacht — NIEMALS beim bloßen Anklicken eines Accounts. Das Panel liest nur aus
-   der DB; die vier Zählwerte (Live/VOD/Serien/Kategorien) werden pro Klick im Hintergrund-Thread
-   gezählt (kein UI-Ruckeln mehr). Für Xtream ruft der Cache-Reload jetzt zusätzlich einmal `player_api`
+   der DB; die vier Zählwerte (Live/VOD/Serien/Kategorien) sind ebenfalls in `AccountInfo` gespeichert
+   (Spalten liveCount/vodCount/seriesCount/categoriesCount, Migrationen 0199–0202; `-1`/NULL = noch nie
+   gezählt → Anzeige „-„) und werden NUR beim Cache-Reload bzw. Import aktualisiert (persistiert in
+   `ReloadCachePopup.reloadSingleAccount`); beim Klick wird nur noch der kleine AccountInfo-Datensatz
+   gelesen — nichts gezählt, keine Server-Anfrage. Für Xtream ruft der Cache-Reload jetzt zusätzlich einmal `player_api`
    (user_info) ab und speichert Ablaufdatum (exp_date) + Status + Profil-JSON — damit steht auch für
    Xtream das Expiry Date im Panel.
 

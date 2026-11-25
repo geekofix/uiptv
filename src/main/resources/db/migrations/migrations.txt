@@ -76,3 +76,7 @@
 0196_create_series_watching_now_snapshot_table.sql
 0197_add_configuration_filter_lock_unlock_duration_minutes.sql
 0198_add_account_pin_level.sql
+0199_add_account_info_live_count.sql
+0200_add_account_info_vod_count.sql
+0201_add_account_info_series_count.sql
+0202_add_account_info_categories_count.sql
