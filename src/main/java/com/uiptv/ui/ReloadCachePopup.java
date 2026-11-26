@@ -933,7 +933,7 @@ public class ReloadCachePopup extends VBox {
     }
 
     private void persistAccountInfoCounts(Account account) {
-        if (account == null || isBlank(account.getDbId())) {
+        if (account == null || account.getDbId() == null || account.getDbId().isBlank()) {
             return;
         }
         AccountInfo info = accountInfoService.getByAccountId(account.getDbId());
