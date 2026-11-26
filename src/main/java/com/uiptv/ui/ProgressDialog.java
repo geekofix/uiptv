@@ -37,6 +37,9 @@ public class ProgressDialog extends Stage {
     private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
     private final VBox messageContainer = new VBox();
     private final ScrollPane scrollPane = new ScrollPane(messageContainer);
+    private final VBox statusContainer = new VBox();
+    private final ScrollPane statusScrollPane = new ScrollPane(statusContainer);
+    private final VBox statusPane = new VBox(5, new Label(I18n.tr("verifyServerStatusTitle")), statusScrollPane);
     private final Button cancelButton = new Button(I18n.tr("autoCancel"));
     private final Button stopButton = new Button(I18n.tr("autoStop"));
     private final ComboBox<String> delayDropdown = new ComboBox<>();
@@ -90,9 +93,21 @@ public class ProgressDialog extends Stage {
 
         bottomBar.getChildren().addAll(pauseWidget, new Label(I18n.tr("autoDelay")), delayDropdown, stopButton, spacer, cancelButton);
 
+        // Server Status Pane (hidden until the first server error is reported)
+        statusContainer.getStyleClass().add("log-message-container");
+        statusContainer.heightProperty().addListener((observable, oldValue, newValue) -> statusScrollPane.setVvalue(1.0));
+        statusScrollPane.getStyleClass().add("log-scroll-pane");
+        statusScrollPane.setFitToWidth(true);
+        statusPane.setVisible(false);
+        statusPane.setPrefWidth(260);
+        statusPane.setMinWidth(260);
+        VBox.setVgrow(statusScrollPane, Priority.ALWAYS);
+        HBox logArea = new HBox(10, scrollPane, statusPane);
+        HBox.setHgrow(scrollPane, Priority.ALWAYS);
+
         // Assemble Root
         root.setTop(progressBar);
-        root.setCenter(scrollPane);
+        root.setCenter(logArea);
         root.setBottom(bottomBar);
 
         Scene scene = new Scene(root, 600, 450); // Increased width for dropdown
@@ -138,6 +153,10 @@ public class ProgressDialog extends Stage {
         progressBar.addResult(isValid);
     }
 
+    public void addErrorResult() {
+        progressBar.addErrorResult();
+    }
+
     public void addProgressText(String text) {
         Platform.runLater(() -> {
             if (text.startsWith("[UPDATE_LAST]")) {
@@ -148,6 +167,13 @@ public class ProgressDialog extends Stage {
         });
     }
     
+    public void addStatusText(String text) {
+        Platform.runLater(() -> {
+            statusPane.setVisible(true);
+            statusContainer.getChildren().add(createStyledText(text));
+        });
+    }
+
     public void setPauseStatus(int secondsRemaining, int totalSeconds) {
         Platform.runLater(() -> {
             if (secondsRemaining > 0) {

@@ -67,6 +67,11 @@ public class SegmentedProgressBar extends HBox {
         currentIndex++;
     }
 
+    public void addErrorResult() {
+        updateSegment(currentIndex, SegmentStatus.WARNING);
+        currentIndex++;
+    }
+
     public void reset() {
         currentIndex = 0;
         Platform.runLater(this::getChildrenClear);

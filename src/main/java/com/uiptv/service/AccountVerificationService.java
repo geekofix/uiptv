@@ -6,19 +6,26 @@ import com.uiptv.model.AccountStatus;
 import com.uiptv.ui.AccountInfoUiUtil;
 import com.uiptv.ui.XtremeParser;
 import com.uiptv.util.AccountType;
+import com.uiptv.util.FetchAPI;
 import com.uiptv.util.StringUtils;
 import com.uiptv.util.XtremeCredentialsJson;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import static com.uiptv.model.Account.AccountAction.itv;
 
 public class AccountVerificationService {
 
-    public record CredentialCheck(String label, boolean valid, String expireDate, String accountStatus) {
+    public record CredentialCheck(String label, boolean valid, boolean serverError, String errorMessage,
+                                   String expireDate, String accountStatus) {
     }
 
     public boolean supports(Account account) {
@@ -35,54 +42,6 @@ public class AccountVerificationService {
         return List.of();
     }
 
-    private List<CredentialCheck> verifyStalkerAccount(Account account) {
-        CacheService cacheService = new CacheServiceImpl();
-        AccountInfo info = AccountInfoService.getInstance().getByAccountId(account.getDbId());
-        String expireDate = formatExpireDate(info != null ? info.getExpireDate() : null);
-        String status = info != null && info.getAccountStatus() != null ? info.getAccountStatus().toDisplay() : "unknown";
-        List<CredentialCheck> checks = new ArrayList<>();
-        for (String mac : stalkerMacs(account)) {
-            boolean valid = cacheService.verifyMacAddress(account, mac);
-            checks.add(new CredentialCheck(mac, valid, expireDate, status));
-        }
-        return checks;
-    }
-
-    private List<CredentialCheck> verifyXtremeAccount(Account account) {
-        List<CredentialCheck> checks = new ArrayList<>();
-        for (XtremeCredentialsJson.Entry entry : xtremeCredentials(account)) {
-            String label = entry.username() + ":" + entry.password();
-            String expireDate;
-            String status;
-            boolean valid;
-            String originalUsername = account.getUsername();
-            String originalPassword = account.getPassword();
-            try {
-                account.setUsername(entry.username());
-                account.setPassword(entry.password());
-                JSONObject userInfo = XtremeParser.fetchUserInfo(account);
-                valid = userInfo != null && !"0".equals(userInfo.optString("auth"));
-                expireDate = formatExpireDate(userInfo == null ? null : userInfo.optString("exp_date", ""));
-                String rawStatus = userInfo == null ? "" : userInfo.optString("status", "");
-                if (StringUtils.isBlank(rawStatus) || "null".equals(rawStatus)) {
-                    status = "unknown";
-                } else {
-                    AccountStatus parsedStatus = AccountStatus.fromValue(rawStatus);
-                    status = parsedStatus != null ? parsedStatus.toDisplay() : rawStatus;
-                }
-            } catch (Exception e) {
-                valid = false;
-                expireDate = "Unknown";
-                status = "unknown";
-            } finally {
-                account.setUsername(originalUsername);
-                account.setPassword(originalPassword);
-            }
-            checks.add(new CredentialCheck(label, valid, expireDate, status));
-        }
-        return checks;
-    }
-
     public int checkCount(Account account) {
         if (account.getType() == AccountType.STALKER_PORTAL) {
             return stalkerMacs(account).size();
@@ -91,6 +50,77 @@ public class AccountVerificationService {
             return xtremeCredentials(account).size();
         }
         return 0;
+    }
+
+    private List<CredentialCheck> verifyStalkerAccount(Account account) {
+        AccountInfo info = AccountInfoService.getInstance().getByAccountId(account.getDbId());
+        String expireDate = formatExpireDate(info != null ? info.getExpireDate() : null);
+        String status = info != null && info.getAccountStatus() != null ? info.getAccountStatus().toDisplay() : "unknown";
+        List<CredentialCheck> checks = new ArrayList<>();
+        for (String mac : stalkerMacs(account)) {
+            checks.add(verifyStalkerMac(account, mac, expireDate, status));
+        }
+        return checks;
+    }
+
+    private CredentialCheck verifyStalkerMac(Account account, String mac, String expireDate, String status) {
+        String originalMac = account.getMacAddress();
+        try {
+            account.setMacAddress(mac);
+            HandshakeService.getInstance().connect(account);
+            if (account.isNotConnected()) {
+                return new CredentialCheck(mac, false, false, null, expireDate, status);
+            }
+            String jsonCategories = FetchAPI.fetch(stalkerCategoryParams(account.getAction()), account);
+            boolean valid = !CategoryService.getInstance().parseCategories(jsonCategories, false).isEmpty();
+            return new CredentialCheck(mac, valid, false, null, expireDate, status);
+        } catch (Exception e) {
+            return new CredentialCheck(mac, false, true, rootMessage(e), expireDate, status);
+        } finally {
+            account.setMacAddress(originalMac);
+        }
+    }
+
+    private List<CredentialCheck> verifyXtremeAccount(Account account) {
+        List<CredentialCheck> checks = new ArrayList<>();
+        for (XtremeCredentialsJson.Entry entry : xtremeCredentials(account)) {
+            String label = entry.username() + ":" + entry.password();
+            String originalUsername = account.getUsername();
+            String originalPassword = account.getPassword();
+            try {
+                account.setUsername(entry.username());
+                account.setPassword(entry.password());
+                JSONObject userInfo = XtremeParser.fetchUserInfo(account);
+                boolean valid = userInfo != null && !"0".equals(userInfo.optString("auth"));
+                String expireDate = formatExpireDate(userInfo == null ? null : userInfo.optString("exp_date", ""));
+                String status = resolveXtreamStatus(userInfo);
+                returnXtremeCredentials(account, originalUsername, originalPassword);
+                checks.add(new CredentialCheck(label, valid, false, null, expireDate, status));
+            } catch (Exception e) {
+                returnXtremeCredentials(account, originalUsername, originalPassword);
+                String message = rootMessage(e);
+                if (message.contains("HTTP 401") || message.contains("HTTP 403")) {
+                    checks.add(new CredentialCheck(label, false, false, null, "Unknown", "unknown"));
+                } else {
+                    checks.add(new CredentialCheck(label, false, true, message, "Unknown", "unknown"));
+                }
+            }
+        }
+        return checks;
+    }
+
+    private String resolveXtreamStatus(JSONObject userInfo) {
+        String rawStatus = userInfo == null ? "" : userInfo.optString("status", "");
+        if (StringUtils.isBlank(rawStatus) || "null".equals(rawStatus)) {
+            return "unknown";
+        }
+        AccountStatus parsedStatus = AccountStatus.fromValue(rawStatus);
+        return parsedStatus != null ? parsedStatus.toDisplay() : rawStatus;
+    }
+
+    private void returnXtremeCredentials(Account account, String username, String password) {
+        account.setUsername(username);
+        account.setPassword(password);
     }
 
     private List<String> stalkerMacs(Account account) {
@@ -118,5 +148,22 @@ public class AccountVerificationService {
     private String formatExpireDate(String rawExpireDate) {
         String formatted = AccountInfoUiUtil.formatDate(rawExpireDate);
         return StringUtils.isBlank(formatted) ? "Unknown" : formatted;
+    }
+
+    private String rootMessage(Exception e) {
+        Throwable cause = e;
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        String message = cause.getMessage();
+        return StringUtils.isNotBlank(message) ? message : cause.getClass().getSimpleName();
+    }
+
+    private Map<String, String> stalkerCategoryParams(Account.AccountAction accountAction) {
+        final Map<String, String> params = new HashMap<>();
+        params.put("JsHttpRequest", new Date().getTime() + "-xml");
+        params.put("type", accountAction.name());
+        params.put("action", accountAction == itv ? "get_genres" : "get_categories");
+        return params;
     }
 }

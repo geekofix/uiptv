@@ -705,6 +705,7 @@ public class AccountListUI extends HBox {
         }
 
         ProgressDialog progressDialog = new ProgressDialog(resolveOwnerStage());
+        progressDialog.setTitle(I18n.tr("verifyAccountsTitle"));
         progressDialog.setSelectedDelay(delayLabel);
         progressDialog.show();
 
@@ -724,6 +725,7 @@ public class AccountListUI extends HBox {
                     progressDialog.addProgressText(I18n.tr("verifyAccountProgress", accountIndex + 1, accounts.size(), account.getAccountName()));
                     List<AccountVerificationService.CredentialCheck> checks = verificationService.verifyAccount(account);
                     boolean anyValid = false;
+                    boolean anyServerError = false;
                     boolean allChecksCompleted = !checks.isEmpty();
                     for (int checkIndex = 0; checkIndex < checks.size(); checkIndex++) {
                         if (isVerificationStopped(stopRequested)) {
@@ -732,8 +734,15 @@ public class AccountListUI extends HBox {
                         }
                         AccountVerificationService.CredentialCheck check = checks.get(checkIndex);
                         progressDialog.addProgressText(I18n.tr("manageVerifyingMacProgress", checkIndex + 1, checks.size(), check.label()));
-                        progressDialog.addResult(check.valid());
-                        progressDialog.addProgressText(I18n.tr(check.valid() ? "manageResultValid" : "manageResultInvalid"));
+                        if (check.serverError()) {
+                            anyServerError = true;
+                            progressDialog.addErrorResult();
+                            progressDialog.addProgressText(I18n.tr("verifyResultError", check.errorMessage()));
+                            progressDialog.addStatusText(account.getAccountName() + " — " + check.label() + " — " + check.errorMessage());
+                        } else {
+                            progressDialog.addResult(check.valid());
+                            progressDialog.addProgressText(I18n.tr(check.valid() ? "manageResultValid" : "manageResultInvalid"));
+                        }
                         progressDialog.addProgressText(I18n.tr("manageAccountInfoExpireDate") + ": " + check.expireDate());
                         progressDialog.addProgressText(I18n.tr("manageAccountInfoStatus") + ": " + check.accountStatus());
                         anyValid = anyValid || check.valid();
@@ -741,7 +750,7 @@ public class AccountListUI extends HBox {
                             pauseBetweenChecks(progressDialog, stopRequested);
                         }
                     }
-                    if (allChecksCompleted && !anyValid) {
+                    if (allChecksCompleted && !anyValid && !anyServerError) {
                         fullyInvalidAccounts.add(account);
                     }
                 }
