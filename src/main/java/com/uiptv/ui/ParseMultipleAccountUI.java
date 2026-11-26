@@ -91,7 +91,7 @@ public class ParseMultipleAccountUI extends VBox {
         parseModeComboBox.getItems().addAll(TextParserService.MODE_STALKER, TextParserService.MODE_XTREME, TextParserService.MODE_M3U);
         parseModeComboBox.setValue(TextParserService.MODE_STALKER);
 
-        groupAccountsCheckBox.setSelected(true);
+        groupAccountsCheckBox.setSelected(false);
         convertM3uToXtremeCheckBox.setSelected(true);
         startVerificationAfterParsingCheckBox.setSelected(true);
 
@@ -165,7 +165,7 @@ public class ParseMultipleAccountUI extends VBox {
     private void clearAll() {
         multipleSPAccounts.clear();
         parseModeComboBox.setValue(TextParserService.MODE_STALKER);
-        groupAccountsCheckBox.setSelected(true);
+        groupAccountsCheckBox.setSelected(false);
         convertM3uToXtremeCheckBox.setSelected(true);
         startVerificationAfterParsingCheckBox.setSelected(true);
     }
@@ -179,10 +179,14 @@ public class ParseMultipleAccountUI extends VBox {
                 }
                 String selectedMode = parseModeComboBox.getValue();
                 boolean startVerificationAfterParsing = startVerificationAfterParsingCheckBox.isSelected();
-                List<Account> createdAccounts = TextParserService.saveBulkAccounts(multipleSPAccounts.getText(), selectedMode, groupAccountsCheckBox.isSelected(), convertM3uToXtremeCheckBox.isSelected());
+                List<String> skippedDuplicates = new java.util.ArrayList<>();
+                List<Account> createdAccounts = TextParserService.saveBulkAccounts(multipleSPAccounts.getText(), selectedMode, groupAccountsCheckBox.isSelected(), convertM3uToXtremeCheckBox.isSelected(), skippedDuplicates::add);
                 clearAll();
                 if (onSaveCallback != null) {
                     onSaveCallback.call(null);
+                }
+                if (!skippedDuplicates.isEmpty()) {
+                    showMessageAlert(I18n.tr("importSkippedDuplicates", skippedDuplicates.size(), String.join("\n", skippedDuplicates)));
                 }
                 showMessageAlert(I18n.tr("autoAccountsParsedAndSaved"));
                 if (startVerificationAfterParsing && createdAccounts != null && !createdAccounts.isEmpty()) {

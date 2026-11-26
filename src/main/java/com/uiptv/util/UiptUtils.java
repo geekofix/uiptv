@@ -4,8 +4,13 @@ import com.uiptv.service.AccountService;
 
 import java.net.URI;
 import java.net.URL;
+import com.uiptv.model.Account;
+
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static com.uiptv.util.StringUtils.EMPTY;
@@ -55,7 +60,7 @@ public class UiptUtils {
             int i = 1;
             String validName;
             do {
-                validName = uri.getHost() + " (" + i++ + ")";
+                validName = uri.getHost() + " (" + String.format("%04d", i++) + ")";
             } while (AccountService.getInstance().getByName(validName) != null);
             return validName;
         } catch (Exception _) {
@@ -196,5 +201,53 @@ public class UiptUtils {
             case 0x1F5A5: return ' '; // 🖥
             default: return c;
         }
+    }
+
+    public static boolean isSameServerUrl(String urlA, String urlB) {
+        return normalizeServerUrl(urlA).equals(normalizeServerUrl(urlB));
+    }
+
+    private static String normalizeServerUrl(String url) {
+        if (isBlank(url)) {
+            return EMPTY;
+        }
+        String normalized = url.trim().toLowerCase(Locale.ROOT);
+        while (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        return normalized;
+    }
+
+    public static boolean isSameValue(String valueA, String valueB) {
+        if (isBlank(valueA) && isBlank(valueB)) {
+            return true;
+        }
+        if (isBlank(valueA) || isBlank(valueB)) {
+            return false;
+        }
+        return valueA.trim().equalsIgnoreCase(valueB.trim());
+    }
+
+    public static Account findExistingAccount(Function<String, Account> accountProvider, String baseName, Predicate<Account> match) {
+        Account plain = accountProvider.apply(baseName);
+        if (plain != null && match.test(plain)) {
+            return plain;
+        }
+        int consecutiveMisses = plain == null ? 1 : 0;
+        for (int counter = 1; counter <= 10_000; counter++) {
+            Account candidate = accountProvider.apply(baseName + " (" + String.format("%04d", counter) + ")");
+            if (candidate == null) {
+                consecutiveMisses++;
+                if (consecutiveMisses >= 20) {
+                    return null;
+                }
+                continue;
+            }
+            consecutiveMisses = 0;
+            if (match.test(candidate)) {
+                return candidate;
+            }
+        }
+        return null;
     }
 }

@@ -13,6 +13,15 @@ import static com.uiptv.util.StringUtils.isNotBlank;
  * Handles parsing of M3U playlist links.
  */
 public class M3uParser implements AccountParser {
+    private java.util.function.Consumer<String> duplicateSink = _ -> {
+    };
+
+    @Override
+    public void setDuplicateSink(java.util.function.Consumer<String> sink) {
+        this.duplicateSink = sink != null ? sink : _ -> {
+        };
+    }
+
     @Override
     public List<Account> parseAndSave(String text, boolean groupAccountsByMac, boolean convertM3uToXtreme) {
         List<Account> createdAccounts = new ArrayList<>();
@@ -32,6 +41,12 @@ public class M3uParser implements AccountParser {
                     m3uPlayLIstUrl = potentialUrl.split("get.php?")[0];
                 }
 
+                Account duplicate = findExistingAccount(AccountService.getInstance()::getByName, getNameFromUrl(m3uPlayLIstUrl), existing ->
+                        isSameValue(existing.getM3u8Path(), m3uPlayLIstUrl));
+                if (duplicate != null) {
+                    duplicateSink.accept(duplicate.getAccountName());
+                    continue;
+                }
                 String uniqueName = getUniqueNameFromUrl(m3uPlayLIstUrl);
                 Account account = new Account(uniqueName, username, password, m3uPlayLIstUrl, null, null, null, null, null, null,
                         accountType, null, m3uPlayLIstUrl, false);

@@ -136,6 +136,7 @@ public class ConfigurationUI extends VBox {
     private final Button reloadCacheButton = new Button(I18n.tr("configReloadAccountsCache"));
     private final Button importDatabaseButton = new Button(I18n.tr(CONFIG_IMPORT_DATABASE));
     private final Button exportDatabaseButton = new Button(I18n.tr(CONFIG_EXPORT_DATABASE));
+    private final Button cleanAccountsButton = new Button(I18n.tr("cleanAccountsButton"));
     private final ProminentButton saveButton = new ProminentButton(I18n.tr("commonSave"));
     private final FileChooser databaseFileChooser = new FileChooser();
     private final Callback<Object> onSaveCallback;
@@ -316,6 +317,7 @@ public class ConfigurationUI extends VBox {
         ffmpegTranscodingHelpLink.getStyleClass().add(STYLE_CLASS_NO_DIM_DISABLED);
         litePlayerFfmpegHelpLink.getStyleClass().add(STYLE_CLASS_NO_DIM_DISABLED);
         VBox databaseSyncGroup = buildDatabaseSyncGroup();
+        VBox accountMaintenanceGroup = buildAccountMaintenanceGroup();
 
         contentContainer.getChildren().addAll(
                 createCollapsibleGroupPane(I18n.tr("configVideoPlayers"), playersGroup, false, videoPlayersHelpLink),
@@ -323,6 +325,7 @@ public class ConfigurationUI extends VBox {
                 createCollapsibleGroupPane(I18n.tr("configDarkTheme"), themeOverridesGroup, true, themeHelpLink),
                 createCollapsibleGroupPane(I18n.tr("configCacheFiltering"), cacheGroup, true, cacheFilteringHelpLink),
                 createCollapsibleGroupPane(I18n.tr("configDatabaseSyncTitle"), databaseSyncGroup, true, databaseSyncHelpLink),
+                createCollapsibleGroupPane(I18n.tr("cleanAccountsGroup"), accountMaintenanceGroup, true, null),
                 createCollapsibleGroupPane(I18n.tr("configFfmpegAndWebServer"), serverGroup, true, ffmpegAndWebServerHelpLink),
                 createCollapsibleGroupPane(I18n.tr("configTmdbMetadata"), tmdbConfigSection, true, tmdbMetadataHelpLink),
                 saveButton
@@ -1280,6 +1283,12 @@ public class ConfigurationUI extends VBox {
         importDatabaseButton.setMaxWidth(Double.MAX_VALUE);
         exportDatabaseButton.setMaxWidth(Double.MAX_VALUE);
         return new VBox(10, importDatabaseButton, exportDatabaseButton);
+    }
+
+    private VBox buildAccountMaintenanceGroup() {
+        cleanAccountsButton.setMaxWidth(Double.MAX_VALUE);
+        cleanAccountsButton.setOnAction(event -> CleanAccountsPopup.showPopup(RootApplication.getPrimaryStage()));
+        return new VBox(10, cleanAccountsButton);
     }
 
     private void saveVlcOptionsConfiguration(boolean showReloadMessage) {

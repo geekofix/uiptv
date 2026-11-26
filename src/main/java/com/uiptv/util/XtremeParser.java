@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 
 import static com.uiptv.util.StringUtils.isBlank;
 import static com.uiptv.util.StringUtils.isNotBlank;
+import static com.uiptv.util.UiptUtils.findExistingAccount;
 import static com.uiptv.util.UiptUtils.replaceAllNonPrintableChars;
 
 /**
@@ -29,6 +30,14 @@ public class XtremeParser implements AccountParser {
 
     private final Function<String, Account> accountProvider;
     private final Consumer<Account> accountSaver;
+    private Consumer<String> duplicateSink = _ -> {
+    };
+
+    @Override
+    public void setDuplicateSink(Consumer<String> sink) {
+        this.duplicateSink = sink != null ? sink : _ -> {
+        };
+    }
 
     public XtremeParser() {
         this(AccountService.getInstance()::getByName, AccountService.getInstance()::save);
@@ -133,6 +142,14 @@ public class XtremeParser implements AccountParser {
         List<Account> createdAccounts = new ArrayList<>();
         Set<String> processedNames = new java.util.HashSet<>();
         for (ParsedAccount parsed : parsedAccounts) {
+            Account duplicate = findExistingAccount(accountProvider, accountNameFromUrl(parsed.url()), existing ->
+                    UiptUtils.isSameServerUrl(existing.getUrl(), parsed.url())
+                            && java.util.Objects.equals(existing.getUsername(), parsed.credentials().username())
+                            && java.util.Objects.equals(existing.getPassword(), parsed.credentials().password()));
+            if (duplicate != null) {
+                duplicateSink.accept(duplicate.getAccountName());
+                continue;
+            }
             String name = nextUniqueAccountName(parsed.url(), processedNames);
             Account account = buildAccount(name, parsed.url(), parsed.credentials());
             accountSaver.accept(account);

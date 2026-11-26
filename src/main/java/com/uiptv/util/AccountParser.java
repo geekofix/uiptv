@@ -8,6 +8,10 @@ import java.util.List;
  * Defines a standard interface for all account parsers.
  */
 public interface AccountParser {
+
+    default void setDuplicateSink(java.util.function.Consumer<String> sink) {
+    }
+
     /**
      * Parses the given text and saves the discovered accounts.
      *

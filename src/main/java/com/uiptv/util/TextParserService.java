@@ -17,6 +17,10 @@ public class TextParserService {
     public static final String MODE_M3U = "M3U Playlists";
 
     public static List<Account> saveBulkAccounts(String text, String mode, boolean groupAccountsByMac, boolean convertM3uToXtreme) {
+        return saveBulkAccounts(text, mode, groupAccountsByMac, convertM3uToXtreme, null);
+    }
+
+    public static List<Account> saveBulkAccounts(String text, String mode, boolean groupAccountsByMac, boolean convertM3uToXtreme, java.util.function.Consumer<String> duplicateSink) {
         AccountParser parser;
 
         if (MODE_STALKER.equals(mode)) {
@@ -27,6 +31,9 @@ public class TextParserService {
             parser = new M3uParser();
         }
 
+        if (duplicateSink != null) {
+            parser.setDuplicateSink(duplicateSink);
+        }
         return parser.parseAndSave(text, groupAccountsByMac, convertM3uToXtreme);
     }
 }

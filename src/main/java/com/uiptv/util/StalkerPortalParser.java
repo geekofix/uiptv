@@ -9,6 +9,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.uiptv.util.StringUtils.isNotBlank;
+import static com.uiptv.util.UiptUtils.findExistingAccount;
 import static com.uiptv.util.UiptUtils.getNameFromUrl;
 
 /**
@@ -27,6 +28,14 @@ public class StalkerPortalParser implements AccountParser {
 
     private final Function<String, Account> accountProvider;
     private final Consumer<Account> accountSaver;
+    private Consumer<String> duplicateSink = _ -> {
+    };
+
+    @Override
+    public void setDuplicateSink(Consumer<String> sink) {
+        this.duplicateSink = sink != null ? sink : _ -> {
+        };
+    }
 
     public StalkerPortalParser() {
         this(
@@ -245,6 +254,13 @@ public class StalkerPortalParser implements AccountParser {
 
     private void saveIndividualAccount(Account currentAccount, List<Account> individualAccounts,
                                        List<Account> createdAccounts, Set<String> processedNames) {
+        Account duplicate = findExistingAccount(accountProvider, getNameFromUrl(currentAccount.getUrl()), existing ->
+                UiptUtils.isSameServerUrl(existing.getUrl(), currentAccount.getUrl())
+                        && UiptUtils.isSameValue(existing.getMacAddress(), currentAccount.getMacAddress()));
+        if (duplicate != null) {
+            duplicateSink.accept(duplicate.getAccountName());
+            return;
+        }
         String uniqueName = nextUniqueAccountName(currentAccount.getUrl(), processedNames);
         currentAccount.setAccountName(uniqueName);
         currentAccount.setMacAddressList(currentAccount.getMacAddress());
