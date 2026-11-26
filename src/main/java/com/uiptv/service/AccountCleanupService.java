@@ -68,6 +68,8 @@ public class AccountCleanupService {
                 unpinned++;
                 activeListener.onLog(account.getAccountName());
             }
+            processed++;
+            activeListener.onProgress(processed, total);
         }
         return new ExpiryPinResult(pinned, unpinned, false);
     }
@@ -127,8 +129,6 @@ public class AccountCleanupService {
             if (listener.isStopRequested()) {
                 return removed;
             }
-            processed++;
-            listener.onProgress(processed, total);
             String dedupeKey = dedupeKey(account);
             if (dedupeKey == null) {
                 continue;
@@ -146,6 +146,8 @@ public class AccountCleanupService {
                 String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
                 listener.onLog(account.getAccountName() + " FAILED: " + reason);
             }
+            processed++;
+            listener.onProgress(processed, total);
         }
         return removed;
     }

@@ -207,6 +207,7 @@ public abstract class BaseMainApplicationUI {
                 context.manageAccountTab().setContent(manageAccountUI);
             }
             com.uiptv.service.AccountInfoService.getInstance().backfillMissingCountsAsync();
+            startExpiryPinScanAsync();
         };
 
         Runnable loadConfiguration = () -> {
@@ -231,6 +232,18 @@ public abstract class BaseMainApplicationUI {
                         () -> scheduleDeferredTabLoad(loadParseMultiple,
                                 () -> scheduleDeferredTabLoad(loadLogDisplay,
                                         () -> scheduleDeferredTabLoad(loadWatchingNow, null)))));
+    }
+
+    private void startExpiryPinScanAsync() {
+        Thread thread = new Thread(() -> {
+            try {
+                new com.uiptv.service.AccountCleanupService().pinExpiringAccounts(null);
+            } catch (Exception _) {
+                // Startup expiry scan is best-effort; the manual scan can always be re-run.
+            }
+        }, "uiptv-expiry-pin-scan");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void scheduleDeferredTabLoad(Runnable loader, Runnable nextStep) {
