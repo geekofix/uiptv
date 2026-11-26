@@ -274,7 +274,7 @@ public class StalkerPortalParser implements AccountParser {
             return true;
         }
         String macList = existing.getMacAddressList() != null ? existing.getMacAddressList() : existing.getMacAddress();
-        if (isBlank(macList) || isBlank(macAddress)) {
+        if (!isNotBlank(macList) || !isNotBlank(macAddress)) {
             return false;
         }
         return Arrays.stream(macList.replace(" ", "").split(","))

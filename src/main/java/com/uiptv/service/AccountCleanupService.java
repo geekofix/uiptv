@@ -29,7 +29,22 @@ public class AccountCleanupService {
     }
 
     public CleanupReport run(CleanupListener listener) {
-        CleanupListener activeListener = listener != null ? listener : new CleanupListener() {
+        CleanupListener activeListener = wrapListener(listener);
+        int renamed = normalizeNames(activeListener);
+        int removedDuplicates = removeDuplicates(activeListener);
+        DatabaseMaintenance.requestVacuumAsync();
+        return new CleanupReport(renamed, removedDuplicates, activeListener.isStopRequested());
+    }
+
+    public int removeDuplicatesOnly(CleanupListener listener) {
+        CleanupListener activeListener = wrapListener(listener);
+        int removedDuplicates = removeDuplicates(activeListener);
+        DatabaseMaintenance.requestVacuumAsync();
+        return removedDuplicates;
+    }
+
+    private CleanupListener wrapListener(CleanupListener listener) {
+        return listener != null ? listener : new CleanupListener() {
             @Override
             public void onProgress(int processed, int total) {
             }
@@ -38,10 +53,6 @@ public class AccountCleanupService {
             public void onLog(String message) {
             }
         };
-        int renamed = normalizeNames(activeListener);
-        int removedDuplicates = removeDuplicates(activeListener);
-        DatabaseMaintenance.requestVacuumAsync();
-        return new CleanupReport(renamed, removedDuplicates, activeListener.isStopRequested());
     }
 
     private int normalizeNames(CleanupListener listener) {

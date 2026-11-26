@@ -25,6 +25,7 @@ import java.time.format.DateTimeFormatter;
 public class CleanAccountsPopup extends VBox {
 
     private final Stage stage;
+    private final boolean normalizeNames;
     private final TextArea logArea = new TextArea();
     private final ProgressBar progressBar = new ProgressBar(0);
     private final Label remainingLabel = new Label();
@@ -35,8 +36,9 @@ public class CleanAccountsPopup extends VBox {
     private final StringBuilder logBuilder = new StringBuilder();
     private volatile boolean stopRequested = false;
 
-    private CleanAccountsPopup(Stage stage) {
+    private CleanAccountsPopup(Stage stage, boolean normalizeNames) {
         this.stage = stage;
+        this.normalizeNames = normalizeNames;
         setSpacing(10);
         setPadding(new Insets(12));
         buildContent();
@@ -44,18 +46,22 @@ public class CleanAccountsPopup extends VBox {
     }
 
     public static void showPopup(Stage owner) {
+        showPopup(owner, true);
+    }
+
+    public static void showPopup(Stage owner, boolean normalizeNames) {
         Stage popupStage = new Stage();
         if (owner != null) {
             popupStage.initOwner(owner);
             popupStage.initModality(Modality.WINDOW_MODAL);
         }
-        CleanAccountsPopup popup = new CleanAccountsPopup(popupStage);
+        CleanAccountsPopup popup = new CleanAccountsPopup(popupStage, normalizeNames);
         Scene scene = new Scene(popup, 720, 520);
         I18n.applySceneOrientation(scene);
         if (RootApplication.getCurrentTheme() != null) {
             scene.getStylesheets().add(RootApplication.getCurrentTheme());
         }
-        popupStage.setTitle(I18n.tr("cleanAccountsTitle"));
+        popupStage.setTitle(I18n.tr(normalizeNames ? "cleanAccountsTitle" : "clearDuplicatesTitle"));
         popupStage.setScene(scene);
         popupStage.showAndWait();
     }
@@ -128,11 +134,17 @@ public class CleanAccountsPopup extends VBox {
                 return stopRequested;
             }
         };
-        appendLogOnFx(I18n.tr("cleanLogPhaseNormalize"));
-        AccountCleanupService.CleanupReport report = service.run(listener);
-        appendLogOnFx(report.stoppedEarly()
-                ? I18n.tr("cleanLogStopped")
-                : I18n.tr("cleanLogSummary", report.renamedAccounts(), report.removedDuplicates()));
+        if (normalizeNames) {
+            appendLogOnFx(I18n.tr("cleanLogPhaseNormalize"));
+            AccountCleanupService.CleanupReport report = service.run(listener);
+            appendLogOnFx(report.stoppedEarly()
+                    ? I18n.tr("cleanLogStopped")
+                    : I18n.tr("cleanLogSummary", report.renamedAccounts(), report.removedDuplicates()));
+        } else {
+            appendLogOnFx(I18n.tr("clearDuplicatesLogPhase"));
+            int removedDuplicates = service.removeDuplicatesOnly(listener);
+            appendLogOnFx(I18n.tr("clearDuplicatesLogSummary", removedDuplicates));
+        }
         Platform.runLater(() -> {
             progressBar.setProgress(1.0);
             remainingLabel.setText("");
