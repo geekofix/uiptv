@@ -184,6 +184,16 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    Schritt, abschließendes debounced VACUUM). c) Import-Duplikat-Schutz vergleicht jetzt auch MAC-Listen und
    Xtream-Credentials-JSON (nicht nur primäre Werte).
 
+17. **BUGFIX SQLITE_BUSY beim Duplikate-Entfernen + Startverzögerung (Version 0.1.13):** Wie beim Reload-Problem
+   hing ein VACUUM-Trigger IN `deleteAccountData` — jedes gelöschte Duplikat startete das exklusive VACUUM,
+   die Folge-Löschungen liefen in den Lock („[SQLITE_BUSY] database is locked“), der Lauf starb (Terminal:
+   Stacktrace/Exit; Popup: Fortschritt/Restzeit stand still, weil der Hintergrundthread tot war — kein
+   Fehler im UI). Fixes: a) VACUUM nur noch am ENDE von Lösch-Batches (Kontextmenü-Löschloop, Delete-Account-
+   Task, deleteAll, Cleanups — Letzteres war schon korrekt). b) Cleanup verzeiht Einzel-Fehler („FAILED: …“-Logzeile)
+   und läuft weiter. c) Das gelegentliche Aufhängen nach dem ERSTEN Duplikat war genau dieser Lock-Tod.
+   Die 10–15 s Startverzögerung war sehr wahrscheinlich das vom abgestürzten Lauf hinterlassene große WAL-File,
+   das beim App-Start zurückgespielt wurde — nach einem sauberen Cleanup-Durchlauf prüfen.
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,
