@@ -194,6 +194,17 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    Die 10–15 s Startverzögerung war sehr wahrscheinlich das vom abgestürzten Lauf hinterlassene große WAL-File,
    das beim App-Start zurückgespielt wurde — nach einem sauberen Cleanup-Durchlauf prüfen.
 
+18. **Expiry-Pin (Version 0.1.13):** Automatischer „Uhr-Pin“ (Level 6, nur automatisch vergebbar — die Pin-
+   Checkboxen im Account-Formular bleiben 1–5) für Konten, die binnen 7 Tagen ablaufen oder bereits abgelaufen
+   sind. Account-Spalte: sechster Reiter mit Uhr-Symbol (⏰) filtert Level 6; in der Zeile erscheint statt des
+   Pin-Symbols eine rote Uhr. Auslöser: a) Terminal `uiptv -expiry` (Fortschritt + „expiry pin changed: …“),
+   b) Settings → Account Maintenance → „Pin Expiring Accounts“ (dritter Button, geteiltes Popup mit
+   Fortschritt/Restzeit/Copy/Export Log). Lauf: liest nur die winzige AccountInfo-Tabelle (1 Zeile/Konto) —
+   auch bei 7-GB-DB in Sekundenbruchteilen bis wenigen Sekunden fertig; die Kanal-Tabellen werden NICHT
+   berührt. Kollisions-Schutz: manuelle Pins 1–5 werden nie geändert; Speichern eines Uhr-Pin-Kontos im
+   Account-Formular behält Level 6, wenn kein manueller Pin gewählt wurde; „Unpin“ im Kontextmenü setzt 0
+   (nächster Scan pinnt ggf. wieder); erneutes Pinnen/Entpinnen läuft über den Scan.
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,

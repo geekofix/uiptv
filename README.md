@@ -46,6 +46,9 @@ Prebuilt packages are built automatically by GitHub Actions on every change
   with the terminal command `uiptv -duplicates`. It shows live progress and
   exits without starting the app; the same cleanup also runs from the
   "Account Maintenance" section in the settings.
+- **Pin accounts expiring within 7 days** onto the clock tab with the
+  terminal command `uiptv -expiry`, or via the "Pin Expiring Accounts"
+  button in the settings.
 - **Other systems:** not provided by this fork. It is Linux-only — see the
   note above. Use the upstream project if you need Windows or macOS builds
   or try building from source at your own risk.
