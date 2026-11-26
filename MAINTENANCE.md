@@ -156,6 +156,18 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    c) Reload-Fehlertexte zeigen jetzt die SQLite-Ursache statt der generischen Wrapper-Meldung
    („Failed: [SQLITE_BUSY] database is locked“ o. ä.), damit künftige Fehler sofort diagnostizierbar sind.
 
+14. **Import-Namensschema, Duplikat-Schutz, Clean Accounts (Version 0.1.13):** a) Der M3U-Import vergab
+   Legacy-Namen `host (1)`, `host (10)` — `UiptUtils.getUniqueNameFromUrl` übershen in der Umbenenn-Runde;
+   jetzt 4-stellig (`host (0001)`). b) „Group Accounts“ ist default AB (manuell zuschaltbar); gruppierte
+   Accounts behalten bewusst den nackten Server-Namen ohne Klammer (kennzeichnet gruppierte Einträge).
+   c) Individual-Importe prüfen Vorhandensein: Stalker = Server+MAC, Xtream = Server+Username+Passwort,
+   M3U = identischer Pfad; existierende werden übersprungen und nach dem Import als Liste gemeldet
+   (Alert mit Namen; Annahme nicht in den Reload-Windows-Status — das kommt mit dem geplanten
+   Gruppierungs-Rework). d) NEU „Clean Accounts“ (Settings → „Account Maintenance“): Popup normalisiert
+   Kontennamen (wie `uiptv -names`) und löscht echte Dupletten (gleiche Kriterien wie c; NICHT nach
+   Namen), inkl. Fortschrittsbalken, Restzeitschätzung, Log, Copy/Export Log, „Stop nach aktuellem
+   Schritt“; am Ende VACUUM (debounced). Behalten wird jeweils der zuerst angelegte Account.
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,
