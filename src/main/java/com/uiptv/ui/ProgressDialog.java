@@ -25,14 +25,19 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProgressDialog extends Stage {
     private static final String LOG_TEXT_STYLE_CLASS = "log-text";
+    private final List<String> logLines = new ArrayList<>();
+    private final List<String> statusLines = new ArrayList<>();
 
     private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
     private final VBox messageContainer = new VBox();
@@ -51,7 +56,7 @@ public class ProgressDialog extends Stage {
 
     public ProgressDialog(Stage owner) {
         initOwner(owner);
-        initModality(Modality.APPLICATION_MODAL);
+        initModality(Modality.NONE);
         setTitle(I18n.tr("autoVerifyingMacAddresses"));
 
         // Root Layout
@@ -99,18 +104,20 @@ public class ProgressDialog extends Stage {
         statusScrollPane.getStyleClass().add("log-scroll-pane");
         statusScrollPane.setFitToWidth(true);
         statusPane.setVisible(false);
-        statusPane.setPrefWidth(260);
-        statusPane.setMinWidth(260);
+        statusPane.setPrefWidth(300);
+        statusPane.setMinWidth(300);
         VBox.setVgrow(statusScrollPane, Priority.ALWAYS);
-        HBox logArea = new HBox(10, scrollPane, statusPane);
-        HBox.setHgrow(scrollPane, Priority.ALWAYS);
+        statusPane.getChildren().add(buildStatusPaneButtons());
+
+        HBox logArea = new HBox(10, buildLogPane(), statusPane);
+        HBox.setHgrow(logArea.getChildren().get(0), Priority.ALWAYS);
 
         // Assemble Root
         root.setTop(progressBar);
         root.setCenter(logArea);
         root.setBottom(bottomBar);
 
-        Scene scene = new Scene(root, 600, 450); // Increased width for dropdown
+        Scene scene = new Scene(root, 900, 620); // Increased width for dropdown
         I18n.applySceneOrientation(scene);
         if (owner != null && owner.getScene() != null) {
             scene.getStylesheets().addAll(owner.getScene().getStylesheets());
@@ -157,19 +164,70 @@ public class ProgressDialog extends Stage {
         progressBar.addErrorResult();
     }
 
+    private VBox buildLogPane() {
+        HBox logButtons = new HBox(10, buildCopyButton(logLines), buildExportButton(logLines, "uiptv_verify_log_"));
+        VBox logPane = new VBox(5, scrollPane, logButtons);
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+        return logPane;
+    }
+
+    private HBox buildStatusPaneButtons() {
+        return new HBox(10, buildCopyButton(statusLines), buildExportButton(statusLines, "uiptv_verify_status_"));
+    }
+
+    private Button buildCopyButton(List<String> lines) {
+        Button copyButton = new Button(I18n.tr("autoCopyLog"));
+        copyButton.setOnAction(event -> {
+            javafx.scene.input.Clipboard clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
+            javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
+            content.putString(String.join("\n", lines));
+            clipboard.setContent(content);
+        });
+        return copyButton;
+    }
+
+    private Button buildExportButton(List<String> lines, String filePrefix) {
+        Button exportButton = new Button(I18n.tr("reloadExportLog"));
+        exportButton.setOnAction(event -> exportLinesToFile(lines, filePrefix));
+        return exportButton;
+    }
+
+    private void exportLinesToFile(List<String> lines, String filePrefix) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(I18n.tr("reloadExportLog"));
+        fileChooser.setInitialFileName(buildExportFileName(filePrefix));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(I18n.tr("reloadExportLogFileExtension"), "*.txt"));
+        java.io.File target = fileChooser.showSaveDialog(this);
+        if (target == null) {
+            return;
+        }
+        try {
+            java.nio.file.Files.writeString(target.toPath(), String.join("\n", lines), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            com.uiptv.widget.UIptvAlert.showErrorAlert(I18n.tr("reloadExportLogFailed", e.getMessage()));
+        }
+    }
+
+    private String buildExportFileName(String filePrefix) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
+        return filePrefix + formatter.format(LocalDateTime.now()) + ".txt";
+    }
+
     public void addProgressText(String text) {
         Platform.runLater(() -> {
             if (text.startsWith("[UPDATE_LAST]")) {
                 updateLastLine(text.substring(13));
             } else {
+                logLines.add(text);
                 messageContainer.getChildren().add(createStyledText(text));
             }
         });
     }
-    
+
     public void addStatusText(String text) {
         Platform.runLater(() -> {
             statusPane.setVisible(true);
+            statusLines.add(text);
             statusContainer.getChildren().add(createStyledText(text));
         });
     }
@@ -188,6 +246,9 @@ public class ProgressDialog extends Stage {
     }
 
     private void updateLastLine(String text) {
+        if (!logLines.isEmpty()) {
+            logLines.set(logLines.size() - 1, text);
+        }
         if (!messageContainer.getChildren().isEmpty()) {
             int lastIndex = messageContainer.getChildren().size() - 1;
             Node lastNode = messageContainer.getChildren().get(lastIndex);
@@ -195,6 +256,7 @@ public class ProgressDialog extends Stage {
                 textFlow.getChildren().setAll(new Text(text));
             }
         } else {
+            logLines.add(text);
             messageContainer.getChildren().add(createStyledText(text));
         }
     }

@@ -69,7 +69,11 @@ public class XtremeParser {
     }
 
     public static JSONObject fetchUserInfo(Account account) throws IOException {
-        return new JSONObject(fetchPlayerApi(account, "", null)).optJSONObject("user_info");
+        return fetchUserInfo(account, null);
+    }
+
+    public static JSONObject fetchUserInfo(Account account, HttpUtil.RequestOptions options) throws IOException {
+        return new JSONObject(fetchPlayerApi(account, "", null, options)).optJSONObject("user_info");
     }
 
     public static List<Category> parseCategories(Account account) {
@@ -200,6 +204,11 @@ public class XtremeParser {
     }
 
     private static String fetchPlayerApi(Account account, String action, Map<String, String> extraParams) throws IOException {
+        return fetchPlayerApi(account, action, extraParams, null);
+    }
+
+    private static String fetchPlayerApi(Account account, String action, Map<String, String> extraParams,
+                                         HttpUtil.RequestOptions options) throws IOException {
         List<String> baseUrlCandidates = baseUrlCandidates(account);
         if (baseUrlCandidates.isEmpty()) {
             throw new IOException("Xtream base URL is blank.");
@@ -209,7 +218,7 @@ public class XtremeParser {
         for (int index = 0; index < baseUrlCandidates.size(); index++) {
             boolean hasMoreCandidates = hasMoreBaseUrlCandidates(baseUrlCandidates, index);
             try {
-                String responseBody = fetchPlayerApiCandidate(baseUrlCandidates.get(index), account, action, extraParams, hasMoreCandidates);
+                String responseBody = fetchPlayerApiCandidate(baseUrlCandidates.get(index), account, action, extraParams, hasMoreCandidates, options);
                 if (responseBody != null) {
                     return responseBody;
                 }
@@ -225,10 +234,10 @@ public class XtremeParser {
     }
 
     private static String fetchPlayerApiCandidate(String baseUrl, Account account, String action, Map<String, String> extraParams,
-                                                  boolean hasMoreCandidates) throws IOException {
+                                                  boolean hasMoreCandidates, HttpUtil.RequestOptions options) throws IOException {
         HttpUtil.HttpResult response;
         try {
-            response = HttpUtil.sendRequest(buildPlayerApiUrl(baseUrl, account, action, extraParams), null, "GET");
+            response = HttpUtil.sendRequest(buildPlayerApiUrl(baseUrl, account, action, extraParams), null, "GET", null, options);
         } catch (Exception e) {
             throw toPlayerApiIOException(e);
         }

@@ -7,6 +7,7 @@ import com.uiptv.ui.AccountInfoUiUtil;
 import com.uiptv.ui.XtremeParser;
 import com.uiptv.util.AccountType;
 import com.uiptv.util.FetchAPI;
+import com.uiptv.util.HttpUtil;
 import com.uiptv.util.StringUtils;
 import com.uiptv.util.XtremeCredentialsJson;
 import org.json.JSONObject;
@@ -23,6 +24,10 @@ import java.util.Set;
 import static com.uiptv.model.Account.AccountAction.itv;
 
 public class AccountVerificationService {
+    private static final int VERIFY_TIMEOUT_SECONDS = 15;
+    private static final HttpUtil.RequestOptions VERIFY_REQUEST_OPTIONS =
+            new HttpUtil.RequestOptions(true, true, VERIFY_TIMEOUT_SECONDS, VERIFY_TIMEOUT_SECONDS, VERIFY_TIMEOUT_SECONDS);
+
 
     public record CredentialCheck(String label, boolean valid, boolean serverError, String errorMessage,
                                    String expireDate, String accountStatus) {
@@ -71,7 +76,7 @@ public class AccountVerificationService {
             if (account.isNotConnected()) {
                 return new CredentialCheck(mac, false, false, null, expireDate, status);
             }
-            String jsonCategories = FetchAPI.fetch(stalkerCategoryParams(account.getAction()), account);
+            String jsonCategories = FetchAPI.fetch(stalkerCategoryParams(account.getAction()), account, VERIFY_REQUEST_OPTIONS);
             boolean valid = !CategoryService.getInstance().parseCategories(jsonCategories, false).isEmpty();
             return new CredentialCheck(mac, valid, false, null, expireDate, status);
         } catch (Exception e) {
@@ -90,7 +95,7 @@ public class AccountVerificationService {
             try {
                 account.setUsername(entry.username());
                 account.setPassword(entry.password());
-                JSONObject userInfo = XtremeParser.fetchUserInfo(account);
+                JSONObject userInfo = XtremeParser.fetchUserInfo(account, VERIFY_REQUEST_OPTIONS);
                 boolean valid = userInfo != null && !"0".equals(userInfo.optString("auth"));
                 String expireDate = formatExpireDate(userInfo == null ? null : userInfo.optString("exp_date", ""));
                 String status = resolveXtreamStatus(userInfo);
