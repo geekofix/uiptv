@@ -220,7 +220,11 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    (Titel „Verifying Accounts...“), mit Kopfzeile pro Konto und Expiry/Status-Infozeilen. NEU: getrenntes
    „Server Status“-Fenster rechts im Dialog (erscheint nur bei Fehlern) mit Meldung + Kontoname +
    MAC/user:pass — Server nicht erreichbar/HTTP-Fehler wird als [ERROR] geloggt (Balkensegment amber statt
-   rot/grün), damit „kurzzeitig down“ von „abgelaufen“ unterscheidbar ist. Jede FEHLGESCHLAGENE Prüfung
+   rot/grün), damit „kurzzeitig down“ von „abgelaufen“ unterscheidbar ist. SERVER-MERKEN pro Lauf: Ein
+   serverbezogener Fehler (unreichbar, Connection Reset, Timeout, HTTP 404, kaputte JSON-Antwort) markiert
+   den Server für den Rest des Laufs — weitere MACs/Kombos desselben Servers werden sofort als „Skipped“
+   geloggt (amber, ohne erneutes Warten); NICHT gemerkt werden Invalid/HTTP 401/403 (kontospezifisch).
+   Verify-Timeout 10 s (statt 30 s Standard). Jede FEHLGESCHLAGENE Prüfung
    (INVALID oder Server-Fehler) erscheint rechts als Zeile mit CHECKBOX; „Delete Selected“-Button unten
    rechts löscht die angehakten KONTEN nach Bestätigung, danach VACUUM (identisch für Stalker und Xtream;
    der frühere automatische Lösch-Dialog am Ende wurde durch die Checkbox-Auswahl ersetzt — kein Ausschluss
