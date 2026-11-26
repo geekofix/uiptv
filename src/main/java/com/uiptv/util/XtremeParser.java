@@ -144,8 +144,7 @@ public class XtremeParser implements AccountParser {
         for (ParsedAccount parsed : parsedAccounts) {
             Account duplicate = findExistingAccount(accountProvider, accountNameFromUrl(parsed.url()), existing ->
                     UiptUtils.isSameServerUrl(existing.getUrl(), parsed.url())
-                            && java.util.Objects.equals(existing.getUsername(), parsed.credentials().username())
-                            && java.util.Objects.equals(existing.getPassword(), parsed.credentials().password()));
+                            && existingAccountHasCredentials(existing, parsed.credentials()));
             if (duplicate != null) {
                 duplicateSink.accept(duplicate.getAccountName());
                 continue;
@@ -218,6 +217,19 @@ public class XtremeParser implements AccountParser {
             candidate = baseName + " (" + String.format("%04d", counter) + ")";
         }
         return candidate;
+    }
+
+    private boolean existingAccountHasCredentials(Account existing, Credentials credentials) {
+        if (credentials == null || isBlank(credentials.username())) {
+            return false;
+        }
+        if (java.util.Objects.equals(existing.getUsername(), credentials.username())
+                && java.util.Objects.equals(existing.getPassword(), credentials.password())) {
+            return true;
+        }
+        return XtremeCredentialsJson.parse(existing.getXtremeCredentialsJson()).stream().anyMatch(entry ->
+                entry.username().equals(credentials.username())
+                        && java.util.Objects.equals(entry.password(), credentials.password()));
     }
 
     private String accountNameFromUrl(String urlString) {

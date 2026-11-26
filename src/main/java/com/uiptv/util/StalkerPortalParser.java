@@ -256,7 +256,7 @@ public class StalkerPortalParser implements AccountParser {
                                        List<Account> createdAccounts, Set<String> processedNames) {
         Account duplicate = findExistingAccount(accountProvider, getNameFromUrl(currentAccount.getUrl()), existing ->
                 UiptUtils.isSameServerUrl(existing.getUrl(), currentAccount.getUrl())
-                        && UiptUtils.isSameValue(existing.getMacAddress(), currentAccount.getMacAddress()));
+                        && existingAccountHasMac(existing, currentAccount.getMacAddress()));
         if (duplicate != null) {
             duplicateSink.accept(duplicate.getAccountName());
             return;
@@ -267,6 +267,18 @@ public class StalkerPortalParser implements AccountParser {
         individualAccounts.add(currentAccount);
         processedNames.add(uniqueName);
         createdAccounts.add(currentAccount);
+    }
+
+    private boolean existingAccountHasMac(Account existing, String macAddress) {
+        if (isNotBlank(macAddress) && UiptUtils.isSameValue(existing.getMacAddress(), macAddress)) {
+            return true;
+        }
+        String macList = existing.getMacAddressList() != null ? existing.getMacAddressList() : existing.getMacAddress();
+        if (isBlank(macList) || isBlank(macAddress)) {
+            return false;
+        }
+        return Arrays.stream(macList.replace(" ", "").split(","))
+                .anyMatch(mac -> mac.equalsIgnoreCase(macAddress.trim()));
     }
 
     private String nextUniqueAccountName(String url, Set<String> processedNames) {
