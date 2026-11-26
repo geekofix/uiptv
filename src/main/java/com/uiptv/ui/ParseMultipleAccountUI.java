@@ -198,7 +198,7 @@ public class ParseMultipleAccountUI extends VBox {
         Stage owner = getScene() != null && getScene().getWindow() instanceof Stage stage
                 ? stage
                 : null;
-        ReloadCachePopup.showPopup(owner, null, this::notifyAccountsChanged);
+        ReloadCachePopup.showStatusPopup(owner);
     }
 
     private void openVerificationPopup(List<Account> accountsToVerify) {

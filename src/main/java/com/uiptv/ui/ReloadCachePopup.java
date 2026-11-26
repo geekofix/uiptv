@@ -128,6 +128,16 @@ public class ReloadCachePopup extends VBox {
     private static ReloadCachePopup activePopup;
     private static Stage activeStage;
 
+    public static void showStatusPopup(Stage owner) {
+        if (activeStage != null) {
+            activeStage.show();
+            activeStage.toFront();
+            activeStage.requestFocus();
+            return;
+        }
+        showPopup(owner, null, null);
+    }
+
     public static void showPopup(Stage owner, List<Account> preselectedAccounts, Runnable onAccountsDeleted) {
         ReloadCachePopup current = activePopup;
         if (current != null && current.reloadRunActive && activeStage != null) {
