@@ -14,6 +14,8 @@ public class DatabaseMaintenance {
     private DatabaseMaintenance() {
     }
 
+    private static final long VACUUM_QUIET_PERIOD_MS = 8000;
+
     public static void requestVacuumAsync() {
         if (vacuumRunning.get()) {
             vacuumPending = true;
@@ -22,6 +24,7 @@ public class DatabaseMaintenance {
         Thread thread = new Thread(() -> {
             vacuumRunning.set(true);
             try {
+                sleepQuietly(VACUUM_QUIET_PERIOD_MS);
                 do {
                     vacuumPending = false;
                     vacuum();
@@ -32,6 +35,14 @@ public class DatabaseMaintenance {
         }, "uiptv-db-vacuum");
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private static void sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static void vacuum() {

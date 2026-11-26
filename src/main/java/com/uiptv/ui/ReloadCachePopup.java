@@ -545,10 +545,16 @@ public class ReloadCachePopup extends VBox {
             addIssue(accountIssues, I18n.tr("reloadMarkedBadByUser"));
         } catch (Exception e) {
             failed = true;
-            logMessage(account, LOG_RELOAD_FAILED_PREFIX + " " + shortFailure(e.getMessage()));
-            addIssue(accountIssues, I18n.tr("reloadFailedReason", shortFailure(e.getMessage())));
+            logMessage(account, LOG_RELOAD_FAILED_PREFIX + " " + shortFailure(rootCauseMessage(e)));
+            addIssue(accountIssues, I18n.tr("reloadFailedReason", shortFailure(rootCauseMessage(e))));
         } finally {
-            persistAccountInfoCounts(account);
+            try {
+                persistAccountInfoCounts(account);
+            } catch (Exception e) {
+                logMessage(account, LOG_RELOAD_FAILED_PREFIX + " " + shortFailure(e.getMessage()));
+                com.uiptv.util.AppLog.addErrorLog(ReloadCachePopup.class, "Persisting account info counts failed for "
+                        + account.getAccountName() + ": " + rootCauseMessage(e));
+            }
             refreshAccountInfoTitle(account);
         }
         boolean criticalFailure = runOutcomeTracker.hasCriticalFailure(account.getDbId());
@@ -613,6 +619,7 @@ public class ReloadCachePopup extends VBox {
 
     private void finishReloadRun(List<Account> processedAccounts, Map<String, AccountRunStatus> finalStatuses,
                                  Map<String, SummaryStatus> summaryStatusByAccountId, int totalFetchedChannels) {
+        com.uiptv.db.DatabaseMaintenance.requestVacuumAsync();
         Platform.runLater(() -> {
             com.uiptv.util.AppLog.addInfoLog(ReloadCachePopup.class, "Reload run completed.");
             reloadButton.setVisible(true);
@@ -1668,6 +1675,15 @@ public class ReloadCachePopup extends VBox {
             case YELLOW -> I18n.tr("reloadSummaryLevelYellow");
             case BAD -> I18n.tr("reloadSummaryLevelBad");
         };
+    }
+
+    private String rootCauseMessage(Throwable throwable) {
+        Throwable current = throwable;
+        while (current.getCause() != null && current.getCause() != current) {
+            current = current.getCause();
+        }
+        String message = current.getMessage();
+        return message == null || message.isBlank() ? current.getClass().getSimpleName() : message.trim();
     }
 
     private String shortFailure(String message) {

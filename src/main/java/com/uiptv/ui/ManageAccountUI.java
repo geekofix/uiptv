@@ -615,6 +615,7 @@ public class ManageAccountUI extends VBox {
             ButtonType result = showDialog(I18n.tr("manageClearAllCachedDataForThisAccount"));
             if (result == ButtonType.YES) {
                 cacheService.clearCache(getAccountFromForm());
+                com.uiptv.db.DatabaseMaintenance.requestVacuumAsync();
                 showMessageAlert(I18n.tr("autoCacheCleared"));
             }
         });

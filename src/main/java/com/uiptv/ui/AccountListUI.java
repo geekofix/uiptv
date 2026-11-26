@@ -658,6 +658,7 @@ public class AccountListUI extends HBox {
             for (Account account : accounts) {
                 cacheService.clearCache(account);
             }
+            com.uiptv.db.DatabaseMaintenance.requestVacuumAsync();
             Platform.runLater(() -> showMessageAlert(I18n.tr("autoCacheCleared")));
         }).start();
     }

@@ -33,7 +33,6 @@ public class ConfigurationService {
     }
     public void clearCache(Account account) {
         ConfigurationDb.get().clearCache(account);
-        com.uiptv.db.DatabaseMaintenance.requestVacuumAsync();
     }
     public void clearAllCache() {
         ConfigurationDb.get().clearAllCache();
