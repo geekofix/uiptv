@@ -211,6 +211,20 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    „interrupted, exiting after the current account“) und beendet dann sauber; SQLite-Transaktionen
    garantieren, dass die DB auch bei Abbruch konsistent bleibt.
 
+19. **Kontextmenü-Verify (Version 0.1.13):** „Verify“-Untermenü in der Account-Spalte (Rechtsklick) für
+   Stalker- und Xtream-Konten, wirksam auf alle markierten Konten. Untermenü-Einträge = Verzögerungswahl
+   (1 s – 30 min, Standard 10 s, wie im Settings-Verify). Ablauf pro Konto: alle MACs (Stalker) bzw. alle
+   Username/Passwort-Kombinationen (Xtream, auch Gruppen-JSON) werden LIVE geprüft — Stalker wie bisher
+   (Handshake + Kategorieabruf), Xtream NEU über player_api user_info (echter Login-Test, NICHT das
+   gecachte Ablaufdatum; auth=0 bzw. HTTP 401/403 = INVALID). Anzeige im ProgressDialog wie Settings-Verify
+   (Titel „Verifying Accounts...“), mit Kopfzeile pro Konto und Expiry/Status-Infozeilen. NEU: getrenntes
+   „Server Status“-Fenster rechts im Dialog (erscheint nur bei Fehlern) mit Meldung + Kontoname +
+   MAC/user:pass — Server nicht erreichbar/HTTP-Fehler wird als [ERROR] geloggt (Balkensegment amber statt
+   rot/grün), damit „kurzzeitig down“ von „abgelaufen“ unterscheidbar ist. Lösch-Angebot am Ende NUR für
+   Konten, bei denen ALLE Prüfungen eindeutig INVALID waren (kein Valid, kein Server-Error); nach Löschen
+   VACUUM. Kern: `AccountVerificationService` (CredentialCheck-Record mit valid/serverError/errorMessage),
+   `XtremeParser.fetchUserInfo`, ProgressDialog.addStatusText/addErrorResult.
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,
