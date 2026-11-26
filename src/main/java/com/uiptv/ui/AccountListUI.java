@@ -72,8 +72,8 @@ public class AccountListUI extends HBox {
     private final ObservableList<AccountItem> masterAccountItems = FXCollections.observableArrayList();
     private final TabPane pinTabs = new TabPane();
     private final Tab allAccountsTab = new Tab(I18n.tr("commonAll"));
-    private final Tab[] pinnedAccountsTabs = new Tab[AccountResolver.PIN_SVG_HEAD_FILLS.length];
-    private final AccountSortMode[] accountSortModes = new AccountSortMode[AccountResolver.PIN_SVG_HEAD_FILLS.length + 1];
+    private final Tab[] pinnedAccountsTabs = new Tab[AccountResolver.PIN_SVG_HEAD_FILLS.length + 1];
+    private final AccountSortMode[] accountSortModes = new AccountSortMode[AccountResolver.PIN_SVG_HEAD_FILLS.length + 2];
     private final AccountChangeListener accountChangeListener = revision -> Platform.runLater(this::refreshIfAttached);
 
     public AccountListUI() { // Removed MediaPlayer argument
@@ -371,10 +371,13 @@ public class AccountListUI extends HBox {
                 pinIconWrapper.setMaxSize(24, 24);
                 pinIconWrapper.setVisible(false);
                 pinIconWrapper.setManaged(false);
+                clockGlyph.setVisible(false);
+                clockGlyph.setManaged(false);
+                clockGlyph.setStyle("-fx-text-fill: " + AccountResolver.EXPIRY_PIN_FILL + ";");
 
                 HBox.setHgrow(spacer, Priority.ALWAYS);
                 graphic.setAlignment(Pos.CENTER_LEFT);
-                graphic.getChildren().addAll(pinIconWrapper, nameLabel, spacer);
+                graphic.getChildren().addAll(pinIconWrapper, clockGlyph, nameLabel, spacer);
             }
 
             @Override
@@ -400,9 +403,12 @@ public class AccountListUI extends HBox {
                 nameLabel.setText(item);
                 int pinLevel = accountItem.getPinLevel();
                 boolean pinned = pinLevel > 0 || accountItem.isPinToTop();
+                boolean expiryPinned = pinLevel == AccountResolver.EXPIRY_PIN_LEVEL;
                 pinHead.setFill(Color.web(AccountResolver.pinHeadFillForLevel(pinLevel)));
-                pinIconWrapper.setVisible(pinned);
-                pinIconWrapper.setManaged(pinned);
+                pinIconWrapper.setVisible(pinned && !expiryPinned);
+                pinIconWrapper.setManaged(pinned && !expiryPinned);
+                clockGlyph.setVisible(expiryPinned);
+                clockGlyph.setManaged(expiryPinned);
                 AccountInfoUiUtil.ExpiryState expiryState = expiryStateByAccountId.get(accountItem.getAccountId());
                 if (expiryState == AccountInfoUiUtil.ExpiryState.WARNING || expiryState == AccountInfoUiUtil.ExpiryState.EXPIRED) {
                     nameLabel.setTextFill(Color.web(expiryState == AccountInfoUiUtil.ExpiryState.WARNING
@@ -460,13 +466,18 @@ public class AccountListUI extends HBox {
         allAccountsTab.setUserData(0);
         List<Tab> tabs = new ArrayList<>();
         tabs.add(allAccountsTab);
-        for (int i = 0; i < pinnedAccountsTabs.length; i++) {
+        for (int i = 0; i < AccountResolver.PIN_SVG_HEAD_FILLS.length; i++) {
             Tab tab = new Tab(String.valueOf(i + 1));
             tab.setClosable(false);
             tab.setUserData(i + 1);
             pinnedAccountsTabs[i] = tab;
             tabs.add(tab);
         }
+        Tab expiryTab = new Tab(AccountResolver.EXPIRY_CLOCK_GLYPH);
+        expiryTab.setClosable(false);
+        expiryTab.setUserData(AccountResolver.EXPIRY_PIN_LEVEL);
+        pinnedAccountsTabs[AccountResolver.PIN_SVG_HEAD_FILLS.length] = expiryTab;
+        tabs.add(expiryTab);
         pinTabs.getTabs().setAll(tabs);
         pinTabs.getSelectionModel().selectFirst();
         pinTabs.getSelectionModel().selectedItemProperty().addListener((_, _, selectedTab) -> {

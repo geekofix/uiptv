@@ -23,6 +23,9 @@ public class AccountResolver {
     }
     public static final String PIN_SVG_VIEW_BOX = "0 0 320 320";
     public static final double PIN_SVG_SCALE = 0.075;
+    public static final int EXPIRY_PIN_LEVEL = 6;
+    public static final String EXPIRY_PIN_FILL = "#ef5350";
+    public static final String EXPIRY_CLOCK_GLYPH = "\u23f0";
 
     public List<AccountRow> resolveAccounts() {
         List<AccountRow> rows = new ArrayList<>();

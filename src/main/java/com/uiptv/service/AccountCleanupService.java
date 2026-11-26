@@ -2,6 +2,9 @@ package com.uiptv.service;
 
 import com.uiptv.db.DatabaseMaintenance;
 import com.uiptv.model.Account;
+import com.uiptv.model.AccountInfo;
+import com.uiptv.ui.AccountInfoUiUtil;
+import com.uiptv.util.AccountResolver;
 import com.uiptv.util.AccountNameFormats;
 import com.uiptv.util.StringUtils;
 
@@ -34,6 +37,52 @@ public class AccountCleanupService {
         int removedDuplicates = removeDuplicates(activeListener);
         DatabaseMaintenance.requestVacuumAsync();
         return new CleanupReport(renamed, removedDuplicates, activeListener.isStopRequested());
+    }
+
+    public record ExpiryPinResult(int pinned, int unpinned, boolean stoppedEarly) {
+    }
+
+    public ExpiryPinResult pinExpiringAccounts(CleanupListener listener) {
+        CleanupListener activeListener = wrapListener(listener);
+        java.util.Map<String, Account> accounts = AccountService.getInstance().getAll();
+        int total = accounts.size();
+        int processed = 0;
+        int pinned = 0;
+        int unpinned = 0;
+        for (Account account : accounts.values()) {
+            if (activeListener.isStopRequested()) {
+                return new ExpiryPinResult(pinned, unpinned, true);
+            }
+            processed++;
+            activeListener.onProgress(processed, total);
+            boolean shouldPin = accountExpiresWithinSevenDays(account);
+            int currentLevel = account.getPinLevel();
+            if (shouldPin && currentLevel != AccountResolver.EXPIRY_PIN_LEVEL) {
+                account.setPinLevel(AccountResolver.EXPIRY_PIN_LEVEL);
+                AccountService.getInstance().save(account);
+                pinned++;
+                activeListener.onLog(account.getAccountName());
+            } else if (!shouldPin && currentLevel == AccountResolver.EXPIRY_PIN_LEVEL) {
+                account.setPinLevel(0);
+                AccountService.getInstance().save(account);
+                unpinned++;
+                activeListener.onLog(account.getAccountName());
+            }
+        }
+        return new ExpiryPinResult(pinned, unpinned, false);
+    }
+
+    private boolean accountExpiresWithinSevenDays(Account account) {
+        AccountInfo info = AccountInfoService.getInstance().getByAccountId(account.getDbId());
+        if (info == null || StringUtils.isBlank(info.getExpireDate())) {
+            return false;
+        }
+        AccountInfoUiUtil.ParsedDate parsed = AccountInfoUiUtil.parseDateValue(info.getExpireDate());
+        if (parsed.instant() == null) {
+            return false;
+        }
+        AccountInfoUiUtil.ExpiryState state = AccountInfoUiUtil.resolveExpiryState(parsed.instant());
+        return state == AccountInfoUiUtil.ExpiryState.WARNING || state == AccountInfoUiUtil.ExpiryState.EXPIRED;
     }
 
     public int removeDuplicatesOnly(CleanupListener listener) {

@@ -1155,6 +1155,12 @@ public class ManageAccountUI extends VBox {
                 macAddress.getValue() != null ? macAddress.getValue() : "", macAddressList.getText(), serialNumber.getText(), deviceId1.getText(), deviceId2.getText(), signature.getText(),
                 resolvedType, epg.getText(), m3u8Path.getText(), selectedPinLevel() > 0);
         account.setPinLevel(selectedPinLevel());
+        if (selectedPinLevel() == 0 && isNotBlank(accountId)) {
+            Account existing = service.getById(accountId);
+            if (existing != null && existing.getPinLevel() == com.uiptv.service.AccountResolver.EXPIRY_PIN_LEVEL) {
+                account.setPinLevel(com.uiptv.service.AccountResolver.EXPIRY_PIN_LEVEL);
+            }
+        }
         if (accountId != null) {
             account.setDbId(accountId);
         }

@@ -23,6 +23,40 @@ public class Main {
                     + ", duration: " + durationSeconds + "s");
             System.exit(0);
         }
+        if ("-expiry".equals(firstArg)) {
+            long[] startedAt = {System.currentTimeMillis()};
+            System.out.println("UIPTV: pinning accounts expiring within 7 days...");
+            AccountCleanupService service = new AccountCleanupService();
+            AccountCleanupService.ExpiryPinResult result = service.pinExpiringAccounts(new AccountCleanupService.CleanupListener() {
+                private long lastPrintMillis = 0;
+
+                @Override
+                public void onProgress(int processed, int total) {
+                    long now = System.currentTimeMillis();
+                    if (now - lastPrintMillis < 100 && processed < total) {
+                        return;
+                    }
+                    lastPrintMillis = now;
+                    double percent = total <= 0 ? 100.0 : processed * 100.0 / total;
+                    long elapsed = now - startedAt[0];
+                    String eta = processed <= 0 ? "-" : (elapsed * (total - processed) / processed / 1000) + "s";
+                    System.out.printf("\rUIPTV: %d/%d accounts (%.0f%%) remaining: %s   ",
+                            processed, total, percent, eta);
+                    System.out.flush();
+                }
+
+                @Override
+                public void onLog(String message) {
+                    System.out.println();
+                    System.out.println("UIPTV: expiry pin changed: " + message);
+                }
+            });
+            long durationSeconds = (System.currentTimeMillis() - startedAt[0]) / 1000;
+            System.out.println();
+            System.out.println("UIPTV: expiry pins set: " + result.pinned()
+                    + ", removed: " + result.unpinned() + ", duration: " + durationSeconds + "s");
+            System.exit(0);
+        }
         if ("-duplicates".equals(firstArg)) {
             long[] startedAt = {System.currentTimeMillis()};
             System.out.println("UIPTV: removing duplicate accounts...");

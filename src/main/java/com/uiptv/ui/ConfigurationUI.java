@@ -138,6 +138,7 @@ public class ConfigurationUI extends VBox {
     private final Button exportDatabaseButton = new Button(I18n.tr(CONFIG_EXPORT_DATABASE));
     private final Button cleanAccountsButton = new Button(I18n.tr("cleanAccountsButton"));
     private final Button clearDuplicatesButton = new Button(I18n.tr("clearDuplicatesButton"));
+    private final Button pinExpiringButton = new Button(I18n.tr("expiryPinButton"));
     private final ProminentButton saveButton = new ProminentButton(I18n.tr("commonSave"));
     private final FileChooser databaseFileChooser = new FileChooser();
     private final Callback<Object> onSaveCallback;
@@ -1291,7 +1292,9 @@ public class ConfigurationUI extends VBox {
         cleanAccountsButton.setOnAction(event -> CleanAccountsPopup.showPopup(RootApplication.getPrimaryStage()));
         clearDuplicatesButton.setMaxWidth(Double.MAX_VALUE);
         clearDuplicatesButton.setOnAction(event -> CleanAccountsPopup.showPopup(RootApplication.getPrimaryStage(), false));
-        return new VBox(10, cleanAccountsButton, clearDuplicatesButton);
+        pinExpiringButton.setMaxWidth(Double.MAX_VALUE);
+        pinExpiringButton.setOnAction(event -> CleanAccountsPopup.showPopup(RootApplication.getPrimaryStage(), CleanAccountsPopup.Mode.EXPIRY));
+        return new VBox(10, cleanAccountsButton, clearDuplicatesButton, pinExpiringButton);
     }
 
     private void saveVlcOptionsConfiguration(boolean showReloadMessage) {
