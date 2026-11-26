@@ -220,10 +220,15 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    (Titel „Verifying Accounts...“), mit Kopfzeile pro Konto und Expiry/Status-Infozeilen. NEU: getrenntes
    „Server Status“-Fenster rechts im Dialog (erscheint nur bei Fehlern) mit Meldung + Kontoname +
    MAC/user:pass — Server nicht erreichbar/HTTP-Fehler wird als [ERROR] geloggt (Balkensegment amber statt
-   rot/grün), damit „kurzzeitig down“ von „abgelaufen“ unterscheidbar ist. Lösch-Angebot am Ende NUR für
-   Konten, bei denen ALLE Prüfungen eindeutig INVALID waren (kein Valid, kein Server-Error); nach Löschen
-   VACUUM. Kern: `AccountVerificationService` (CredentialCheck-Record mit valid/serverError/errorMessage),
-   `XtremeParser.fetchUserInfo`, ProgressDialog.addStatusText/addErrorResult.
+   rot/grün), damit „kurzzeitig down“ von „abgelaufen“ unterscheidbar ist. Jede FEHLGESCHLAGENE Prüfung
+   (INVALID oder Server-Fehler) erscheint rechts als Zeile mit CHECKBOX; „Delete Selected“-Button unten
+   rechts löscht die angehakten KONTEN nach Bestätigung, danach VACUUM (identisch für Stalker und Xtream;
+   der frühere automatische Lösch-Dialog am Ende wurde durch die Checkbox-Auswahl ersetzt — kein Ausschluss
+   mehr bei gemischten Fehlern, Entscheidung liegt beim Nutzer). Dialog: 900×620, NICHT-modal (App bleibt
+   während langsamer Server-Tests nutzbar), Copy/Export-Buttons pro Bereich (Dateinamen uiptv_verify_log_*
+   bzw. uiptv_verify_status_* mit Zeitstempel), Verify-Anfragen mit 15 s Timeout (statt 30 s Standard).
+   Kern: `AccountVerificationService` (CredentialCheck-Record mit valid/serverError/errorMessage),
+   `XtremeParser.fetchUserInfo` (mit RequestOptions), ProgressDialog.addProblemEntry/addErrorResult.
 
 ## Aktuell offene Punkte / ToDos
 
