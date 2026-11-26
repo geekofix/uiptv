@@ -118,6 +118,15 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    laufendem Durchlauf dasselbe Fenster mit vollem Live-Stand (statt eines leeren Popups); läuft nichts,
    öffnet sich ein normales neues Popup.
 
+10. **Cache-/DB-Hygiene (Version 0.1.13):** a) Kontextmenü der Account-Liste: neuer Eintrag „Delete Cache“,
+   wirkt auf alle markierten Accounts (mit Bestätigungsdialog und Hintergrund-Ausführung). b) BUGFIX Account-Löschung:
+   `AccountService.deleteAccountData` löschte VOD/Serien-Kanäle und -Kategorien (VodChannelDb, SeriesChannelDb,
+   VodCategoryDb, SeriesCategoryDb) NIE und beim Live-Category-Filter blieben Zeilen anderer accountType übrig —
+   die uiptv.db wuchsdaher dauerhaft weiter. Jetzt werden alle Cache-Tabellen des Accounts geleert.
+   c) SQLite gibt Dateigröße nur per VACUUM frei — neue Klasse `DatabaseMaintenance` führt nach Account-Löschung
+   und Cache-Löschung (debounced, im Hintergrund) ein VACUUM aus, damit die Datei real schrumpft. VACUUM-Fehler
+   werden nur geloggt (best-effort, nie blockierend).
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,
