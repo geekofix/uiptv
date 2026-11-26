@@ -44,6 +44,7 @@ public class ProgressDialog extends Stage {
     private final List<String> statusLines = new ArrayList<>();
     private final Map<javafx.scene.control.CheckBox, Account> statusAccounts = new LinkedHashMap<>();
     private final List<javafx.scene.control.CheckBox> statusCheckBoxes = new ArrayList<>();
+    private final Map<String, StatusGroup> statusGroups = new LinkedHashMap<>();
     private final Button deleteSelectedButton = new Button(I18n.tr("verifyDeleteSelected"));
     private Consumer<List<Account>> onDeleteSelectedAccounts;
 
@@ -183,8 +184,8 @@ public class ProgressDialog extends Stage {
         selectAllCheckBox.setOnAction(event -> {
             boolean select = selectAllCheckBox.isSelected();
             statusCheckBoxes.forEach(checkBox -> checkBox.setSelected(select));
-            deleteSelectedButton.disableProperty().set(!select && statusCheckBoxes.stream()
-                    .noneMatch(javafx.scene.control.CheckBox::isSelected));
+            statusGroups.values().forEach(this::updateGroupHeaderState);
+            updateDeleteSelectedButtonState();
         });
         deleteSelectedButton.disableProperty().set(true);
         deleteSelectedButton.setOnAction(event -> {
@@ -256,16 +257,57 @@ public class ProgressDialog extends Stage {
     public void addProblemEntry(Account account, String label, String message) {
         Platform.runLater(() -> {
             statusPane.setVisible(true);
-            String line = account.getAccountName() + " — " + label + " — " + message;
-            statusLines.add(line);
+            statusLines.add(account.getAccountName() + " — " + label + " — " + message);
+            StatusGroup group = statusGroups.computeIfAbsent(message, this::createStatusGroup);
             javafx.scene.control.CheckBox checkBox = new javafx.scene.control.CheckBox();
             statusAccounts.put(checkBox, account);
             statusCheckBoxes.add(checkBox);
-            checkBox.setOnAction(event -> deleteSelectedButton.disableProperty().set(
-                    statusCheckBoxes.stream().noneMatch(javafx.scene.control.CheckBox::isSelected)));
-            HBox entry = new HBox(8, checkBox, createStyledText(line));
-            statusContainer.getChildren().add(entry);
+            group.entries.add(checkBox);
+            checkBox.setOnAction(event -> {
+                updateDeleteSelectedButtonState();
+                updateGroupHeaderState(group);
+            });
+            HBox entry = new HBox(8, checkBox, createStyledText(account.getAccountName() + " — " + label));
+            group.entryBox.getChildren().add(entry);
+            group.countLabel.setText("(" + group.entries.size() + ")");
         });
+    }
+
+    private final class StatusGroup {
+        private final javafx.scene.control.CheckBox headerCheckBox = new javafx.scene.control.CheckBox();
+        private final Label countLabel = new Label();
+        private final VBox entryBox = new VBox(3);
+        private final List<javafx.scene.control.CheckBox> entries = new ArrayList<>();
+    }
+
+    private StatusGroup createStatusGroup(String message) {
+        StatusGroup group = new StatusGroup();
+        group.headerCheckBox.setText(message);
+        group.headerCheckBox.setAllowIndeterminate(true);
+        group.headerCheckBox.setOnAction(event -> {
+            group.entries.forEach(checkBox -> checkBox.setSelected(group.headerCheckBox.isSelected()));
+            updateDeleteSelectedButtonState();
+        });
+        HBox groupHeader = new HBox(6, group.headerCheckBox, group.countLabel);
+        group.entryBox.setPadding(new Insets(0, 0, 0, 20));
+        VBox groupBox = new VBox(3, groupHeader, group.entryBox);
+        statusContainer.getChildren().add(groupBox);
+        return group;
+    }
+
+    private void updateGroupHeaderState(StatusGroup group) {
+        if (group.entries.isEmpty()) {
+            return;
+        }
+        boolean allSelected = group.entries.stream().allMatch(javafx.scene.control.CheckBox::isSelected);
+        boolean noneSelected = group.entries.stream().noneMatch(javafx.scene.control.CheckBox::isSelected);
+        group.headerCheckBox.setIndeterminate(!allSelected && !noneSelected);
+        group.headerCheckBox.setSelected(allSelected);
+    }
+
+    private void updateDeleteSelectedButtonState() {
+        deleteSelectedButton.disableProperty().set(
+                statusCheckBoxes.stream().noneMatch(javafx.scene.control.CheckBox::isSelected));
     }
 
     public void setPauseStatus(int secondsRemaining, int totalSeconds) {
