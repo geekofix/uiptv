@@ -41,8 +41,9 @@ public class M3uParser implements AccountParser {
                     m3uPlayLIstUrl = potentialUrl.split("get.php?")[0];
                 }
 
-                Account duplicate = findExistingAccount(AccountService.getInstance()::getByName, getNameFromUrl(m3uPlayLIstUrl), existing ->
-                        isSameValue(existing.getM3u8Path(), m3uPlayLIstUrl));
+                final String playlistUrl = m3uPlayLIstUrl;
+                Account duplicate = findExistingAccount(AccountService.getInstance()::getByName, getNameFromUrl(playlistUrl), existing ->
+                        isSameValue(existing.getM3u8Path(), playlistUrl));
                 if (duplicate != null) {
                     duplicateSink.accept(duplicate.getAccountName());
                     continue;
