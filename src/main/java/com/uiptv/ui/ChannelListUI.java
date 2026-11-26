@@ -642,7 +642,7 @@ public class ChannelListUI extends HBox {
             }
         }
         widthProbeRow.reset();
-        channelName.setPrefWidth(Math.min(measured + 8, MAX_CHANNEL_COLUMN_WIDTH));
+        channelName.setPrefWidth(Math.min(measured * 1.2 + 8, MAX_CHANNEL_COLUMN_WIDTH));
     }
 
     private class ChannelNameProbeRow extends javafx.scene.layout.HBox {
