@@ -26,6 +26,7 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -304,14 +305,38 @@ public class ReloadCachePopup extends VBox {
         stopButton.setOnAction(event -> stopRequested = true);
         Button copyLogButton = new Button(I18n.tr("autoCopyLog"));
         copyLogButton.setOnAction(event -> copyLogsToClipboard());
+        Button exportLogButton = new Button(I18n.tr("reloadExportLog"));
+        exportLogButton.setOnAction(event -> exportLogsToFile());
         Button closeButton = new Button(I18n.tr("autoClose"));
         closeButton.setOnAction(event -> stage.close());
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        HBox buttonBox = new HBox(10, reloadButton, stopButton, spacer, copyLogButton, closeButton);
+        HBox buttonBox = new HBox(10, reloadButton, stopButton, spacer, copyLogButton, exportLogButton, closeButton);
         buttonBox.setAlignment(Pos.CENTER_LEFT);
         buttonBox.setPadding(new Insets(10, 0, 0, 0));
         return buttonBox;
+    }
+
+    private void exportLogsToFile() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(I18n.tr("reloadExportLog"));
+        fileChooser.setInitialFileName(buildExportLogFileName());
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(I18n.tr("reloadExportLogFileExtension"), "*.txt"));
+        File target = fileChooser.showSaveDialog(stage);
+        if (target == null) {
+            return;
+        }
+        try {
+            java.nio.file.Files.writeString(target.toPath(), buildLogsClipboardText(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            Platform.runLater(() -> com.uiptv.widget.UIptvAlert.showErrorAlert(I18n.tr("reloadExportLogFailed", e.getMessage())));
+        }
+    }
+
+    private String buildExportLogFileName() {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
+        return "uiptv_export_log_" + formatter.format(now) + ".txt";
     }
 
     private void copyLogsToClipboard() {

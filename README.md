@@ -81,6 +81,25 @@ Java 25 or later is required.
 Versions count up from the upstream base (`0.1.11` → `0.1.12` → …) whenever a
 feature milestone is completed and confirmed working.
 
+## Purpose and disclaimer
+
+This software is a private, non-commercial **training and educational project**.
+Its only purpose is to study and practice Java, JavaFX, database handling, and
+media playback techniques.
+
+- **No content:** the software ships **without any playlists, channels, streams,
+  or credentials**. It contains no providers and grants access to nothing.
+  Everything the user views must come from accounts and data sources they own
+  or are authorized to use.
+- **No warranty, use at your own risk:** the software may contain bugs. It is
+  provided "as is", without any warranty of any kind. The user is responsible
+  for possible data loss or other consequences of using it — create backups of
+  your data (especially `uiptv.db`) before large operations.
+- **Local laws apply:** users must comply with the laws of their respective
+  country when using this software. The authors of this project do not condone
+  or support any illegal use of it and accept no liability for how the software
+  is used by third parties.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). This project is not affiliated with or endorsed

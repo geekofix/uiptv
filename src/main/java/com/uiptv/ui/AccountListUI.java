@@ -117,6 +117,11 @@ public class AccountListUI extends HBox {
         this.onDeleteCallback = onDeleteCallback;
     }
 
+    private final Map<String, AccountInfoUiUtil.ExpiryState> expiryStateByAccountId = new HashMap<>();
+    private final Map<String, String> expiryDateByAccountId = new HashMap<>();
+    private static final String EXPIRY_WARNING_TEXT_COLOR = "#f9a825";
+    private static final String EXPIRY_EXPIRED_TEXT_COLOR = "#ef5350";
+
     public void refresh() {
         List<AccountItem> catList = new ArrayList<>();
 
@@ -133,7 +138,29 @@ public class AccountListUI extends HBox {
             ));
         }
         masterAccountItems.setAll(catList);
+        refreshExpiryIndicators(catList);
         applyAccountOrdering();
+    }
+
+    private void refreshExpiryIndicators(List<AccountItem> items) {
+        expiryStateByAccountId.clear();
+        expiryDateByAccountId.clear();
+        for (AccountItem item : items) {
+            com.uiptv.model.AccountInfo info = com.uiptv.service.AccountInfoService.getInstance().getByAccountId(item.getAccountId());
+            if (info == null) {
+                continue;
+            }
+            String rawExpire = info.getExpireDate();
+            if (rawExpire == null || rawExpire.isBlank() || rawExpire.startsWith("0000-00-00")) {
+                continue;
+            }
+            AccountInfoUiUtil.ParsedDate parsed = AccountInfoUiUtil.parseDateValue(rawExpire);
+            if (parsed.instant() == null) {
+                continue;
+            }
+            expiryStateByAccountId.put(item.getAccountId(), AccountInfoUiUtil.resolveExpiryState(parsed.instant()));
+            expiryDateByAccountId.put(item.getAccountId(), AccountInfoUiUtil.formatDate(rawExpire));
+        }
     }
 
     private int activePinLevel() {
@@ -376,6 +403,17 @@ public class AccountListUI extends HBox {
                 pinHead.setFill(Color.web(AccountResolver.pinHeadFillForLevel(pinLevel)));
                 pinIconWrapper.setVisible(pinned);
                 pinIconWrapper.setManaged(pinned);
+                AccountInfoUiUtil.ExpiryState expiryState = expiryStateByAccountId.get(accountItem.getAccountId());
+                if (expiryState == AccountInfoUiUtil.ExpiryState.WARNING || expiryState == AccountInfoUiUtil.ExpiryState.EXPIRED) {
+                    nameLabel.setTextFill(Color.web(expiryState == AccountInfoUiUtil.ExpiryState.WARNING
+                            ? EXPIRY_WARNING_TEXT_COLOR
+                            : EXPIRY_EXPIRED_TEXT_COLOR));
+                    String expireDate = expiryDateByAccountId.get(accountItem.getAccountId());
+                    nameLabel.setTooltip(new Tooltip(I18n.tr("manageAccountInfoExpireDate") + ": " + expireDate));
+                } else {
+                    nameLabel.setTextFill(null);
+                    nameLabel.setTooltip(null);
+                }
                 setText(null);
                 setGraphic(graphic);
             }
