@@ -168,6 +168,14 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    Namen), inkl. Fortschrittsbalken, Restzeitschätzung, Log, Copy/Export Log, „Stop nach aktuellem
    Schritt“; am Ende VACUUM (debounced). Behalten wird jeweils der zuerst angelegte Account.
 
+15. **BUGFIX Namens-Normalisierung (Version 0.1.13, Nutzer-Feedback):** Warum `uiptv -names` und Clean Accounts
+   „renamed: 0“ meldeten, obwohl `(1)`-Einträge existierten: Der Algorithmus behielt die Originalnummer suffixierter
+   Konten; kollidierte das formatierte Ziel (z. B. `(0001)` existiert bereits), wurde das Umbenennen STILL
+   übersprungen — `(1)` konnte so nie repariert werden. Neu: kollidierende Legacy-Suffixe erhalten die nächste freie
+   Nummer; nackte (gruppierte) Konten werden NICHT mehr nummeriert (behalten bewusst den nackten Namen); Matching
+   toleriert Leerzeichen am Rand/im Namen. `de.test.eu (0030) -> de.test.eu (0029)` im Clean-Popup war KEIN Rename,
+   sondern die Dupletten-Löschung (gelöscht: (0030), behalten: (0029)) — Dupletten-Erkennung funktioniert also.
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,
