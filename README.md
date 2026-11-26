@@ -23,9 +23,8 @@ Linux-only project:** it is built, maintained, and tested on Linux only
 but this fork does not build, verify, or support those platforms — a clean
 Windows or macOS port would require maintainers who can actually test on
 them.
-It plays Live TV, VOD, and Series from Stalker portals, M3U playlists,
-Xtreme Codes, and RSS feeds — with an embedded player, external players, or
-a local-network web app.
+It supports Xtreme, Stalker Portal, M3U, and RSS — with an embedded player,
+external players, or a local-network web app.
 
 This fork keeps the classic, low-friction desktop UI and adds its own improvements,
 for example five colored pin levels for accounts with matching sub-tabs
@@ -91,6 +90,9 @@ feature milestone is completed and confirmed working.
 This software is a private, non-commercial **training and educational project**.
 Its only purpose is to study and practice Java, JavaFX, database handling, and
 media playback techniques.
+
+**UIPTV is a player: it does not provide or sell subscriptions, channels,
+playlists, or other media.**
 
 - **No content:** the software ships **without any playlists, channels, streams,
   or credentials**. It contains no providers and grants access to nothing.
