@@ -146,6 +146,16 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    setzen (403, fehlende Admin-Rechte der Integration) — Nutzer setzt sie selbst; statt „xtreme“ bitte
    „xtream-codes“ verwenden (wie bei IPTVNator).
 
+13. **BUGFIX „Failed: Unable to execute query“ bei Xtream-Reloads (Version 0.1.13):** Ursache war das in
+   Runde 10 eingebaute VACUUM: Der Trigger hing an `ConfigurationService.clearCache`, was von den Reloadern
+   MITTLERWEILE im Reload aufgerufen wird — das exklusive VACUUM lief also parallel zu den Kanal-Schreibvorgängen
+   und brachte sie auf einer 7-GB-DB hinter den 10-s-Busy-Timeout („Unable to execute query“). Fixes:
+   a) VACUUM wird NUR noch nach abgeschlossenen Aktionen getriggert — nach Ende des kompletten Reload-Durchlaufs,
+   nach expliziten Cache-Löschungen (Kontextmenü/Settings-Button) und nach Account-Löschungen — plus 8 s Ruhephase.
+   b) `persistAccountInfoCounts` ist best-effort (try/catch + Log) und kann einen Reload nie mehr fehlschlagen lassen.
+   c) Reload-Fehlertexte zeigen jetzt die SQLite-Ursache statt der generischen Wrapper-Meldung
+   („Failed: [SQLITE_BUSY] database is locked“ o. ä.), damit künftige Fehler sofort diagnostizierbar sind.
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,
