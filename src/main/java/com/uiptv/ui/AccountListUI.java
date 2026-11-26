@@ -6,6 +6,7 @@ import com.uiptv.model.Category;
 import com.uiptv.service.AccountChangeListener;
 import com.uiptv.service.AccountResolver;
 import com.uiptv.service.AccountService;
+import com.uiptv.service.AccountVerificationService;
 import com.uiptv.service.CacheService;
 import com.uiptv.service.CacheServiceImpl;
 import com.uiptv.service.CategoryService;
@@ -18,6 +19,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -34,6 +36,7 @@ import javafx.stage.Stage;
 import lombok.Setter;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static com.uiptv.model.Account.AccountAction.itv;
@@ -610,6 +613,13 @@ public class AccountListUI extends HBox {
         MenuItem reloadCache = new MenuItem(I18n.tr("autoReloadCache"));
         reloadCache.setOnAction(_ -> handleReloadCache(row.getItem()));
 
+        Menu verifyMenu = new Menu(I18n.tr("autoVerify"));
+        for (String delay : List.of("1 sec", "5 secs", "10 secs", "30 secs", "1 min", "10 mins", "30 mins")) {
+            MenuItem verifyDelayItem = new MenuItem(I18n.tr("verifyDelayOption", delay));
+            verifyDelayItem.setOnAction(_ -> handleVerifyAccounts(delay));
+            verifyMenu.getItems().add(verifyDelayItem);
+        }
+
         MenuItem deleteCache = new MenuItem(I18n.tr("accountListDeleteCache"));
         deleteCache.setOnAction(_ -> handleDeleteCache());
 
@@ -617,7 +627,7 @@ public class AccountListUI extends HBox {
         deleteItem.getStyleClass().add("danger-menu-item");
         deleteItem.setOnAction(_ -> handleDeleteAccounts());
 
-        rowMenu.getItems().addAll(editAccount, new SeparatorMenuItem(), itv, vod, series, new SeparatorMenuItem(), pinMenu, new SeparatorMenuItem(), reloadCache, deleteCache, deleteItem);
+        rowMenu.getItems().addAll(editAccount, new SeparatorMenuItem(), itv, vod, series, new SeparatorMenuItem(), pinMenu, new SeparatorMenuItem(), reloadCache, verifyMenu, deleteCache, deleteItem);
 
         rowMenu.setOnShowing(_ -> {
             if (row.getItem() != null) {
@@ -635,6 +645,7 @@ public class AccountListUI extends HBox {
                 boolean cacheSupported = CACHE_SUPPORTED.contains(account.getType());
                 reloadCache.setVisible(cacheSupported);
                 deleteCache.setVisible(cacheSupported);
+                verifyMenu.setVisible(VOD_AND_SERIES_SUPPORTED.contains(account.getType()));
             }
         });
 
@@ -673,6 +684,129 @@ public class AccountListUI extends HBox {
             com.uiptv.db.DatabaseMaintenance.requestVacuumAsync();
             Platform.runLater(() -> showMessageAlert(I18n.tr("autoCacheCleared")));
         }).start();
+    }
+
+    private void handleVerifyAccounts(String delayLabel) {
+        AccountVerificationService verificationService = new AccountVerificationService();
+        List<Account> accounts = new ArrayList<>();
+        LinkedHashSet<String> uniqueAccountIds = new LinkedHashSet<>();
+        for (AccountItem item : table.getSelectionModel().getSelectedItems()) {
+            if (item == null || !uniqueAccountIds.add(item.getAccountId())) {
+                continue;
+            }
+            Account account = accountService.getById(item.getAccountId());
+            if (verificationService.supports(account)) {
+                accounts.add(account);
+            }
+        }
+        if (accounts.isEmpty()) {
+            showErrorAlert(I18n.tr("verifyNoSupportedAccountSelected"));
+            return;
+        }
+
+        ProgressDialog progressDialog = new ProgressDialog(resolveOwnerStage());
+        progressDialog.setSelectedDelay(delayLabel);
+        progressDialog.show();
+
+        AtomicBoolean stopRequested = new AtomicBoolean(false);
+
+        Task<List<Account>> task = new Task<>() {
+            @Override
+            protected List<Account> call() {
+                List<Account> fullyInvalidAccounts = new ArrayList<>();
+                int totalChecks = accounts.stream().mapToInt(verificationService::checkCount).sum();
+                progressDialog.setTotal(Math.max(totalChecks, 1));
+                for (int accountIndex = 0; accountIndex < accounts.size(); accountIndex++) {
+                    if (isVerificationStopped(stopRequested)) {
+                        break;
+                    }
+                    Account account = accounts.get(accountIndex);
+                    progressDialog.addProgressText(I18n.tr("verifyAccountProgress", accountIndex + 1, accounts.size(), account.getAccountName()));
+                    List<AccountVerificationService.CredentialCheck> checks = verificationService.verifyAccount(account);
+                    boolean anyValid = false;
+                    boolean allChecksCompleted = !checks.isEmpty();
+                    for (int checkIndex = 0; checkIndex < checks.size(); checkIndex++) {
+                        if (isVerificationStopped(stopRequested)) {
+                            allChecksCompleted = false;
+                            break;
+                        }
+                        AccountVerificationService.CredentialCheck check = checks.get(checkIndex);
+                        progressDialog.addProgressText(I18n.tr("manageVerifyingMacProgress", checkIndex + 1, checks.size(), check.label()));
+                        progressDialog.addResult(check.valid());
+                        progressDialog.addProgressText(I18n.tr(check.valid() ? "manageResultValid" : "manageResultInvalid"));
+                        progressDialog.addProgressText(I18n.tr("manageAccountInfoExpireDate") + ": " + check.expireDate());
+                        progressDialog.addProgressText(I18n.tr("manageAccountInfoStatus") + ": " + check.accountStatus());
+                        anyValid = anyValid || check.valid();
+                        if (checkIndex < checks.size() - 1) {
+                            pauseBetweenChecks(progressDialog, stopRequested);
+                        }
+                    }
+                    if (allChecksCompleted && !anyValid) {
+                        fullyInvalidAccounts.add(account);
+                    }
+                }
+                return fullyInvalidAccounts;
+            }
+        };
+
+        progressDialog.setOnClose(task::cancel);
+        progressDialog.setOnStop(() -> stopRequested.set(true));
+
+        task.setOnSucceeded(e -> {
+            List<Account> invalidAccounts = task.getValue();
+            if (!invalidAccounts.isEmpty()) {
+                progressDialog.addProgressText(I18n.tr("verifyInvalidAccountsFound", invalidAccounts.size()));
+                String confirmMessage = I18n.tr("verifyDeleteInvalidAccountsConfirm", invalidAccounts.size(),
+                        invalidAccounts.stream().map(Account::getAccountName).collect(Collectors.joining(", ")));
+                isPromptShowing = true;
+                if (showConfirmationAlert(confirmMessage)) {
+                    for (Account account : invalidAccounts) {
+                        AccountService.getInstance().delete(account.getDbId());
+                        if (onDeleteCallback != null) {
+                            onDeleteCallback.call(accountService.getById(account.getDbId()));
+                        }
+                    }
+                    com.uiptv.db.DatabaseMaintenance.requestVacuumAsync();
+                    refresh();
+                }
+            }
+            progressDialog.markCompleted();
+        });
+
+        task.setOnFailed(e -> {
+            progressDialog.addProgressText(I18n.tr("autoVerificationFailed", task.getException().getMessage()));
+            showErrorAlert(I18n.tr("autoVerificationFailed", task.getException().getMessage()));
+            progressDialog.markCompleted();
+        });
+
+        task.setOnCancelled(e -> {
+            progressDialog.addProgressText(I18n.tr("autoVerificationCancelled"));
+            progressDialog.markCompleted();
+        });
+
+        new Thread(task).start();
+    }
+
+    private boolean isVerificationStopped(AtomicBoolean stopRequested) {
+        return Thread.currentThread().isInterrupted() || stopRequested.get();
+    }
+
+    private void pauseBetweenChecks(ProgressDialog progressDialog, AtomicBoolean stopRequested) {
+        long delayMillis = progressDialog.getSelectedDelayMillis();
+        int totalSeconds = (int) (delayMillis / 1000);
+        for (int seconds = totalSeconds; seconds > 0; seconds--) {
+            if (isVerificationStopped(stopRequested)) {
+                break;
+            }
+            progressDialog.setPauseStatus(seconds, totalSeconds);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        progressDialog.setPauseStatus(0, 0);
     }
 
     private void handleSetPinLevel(int pinLevel) {

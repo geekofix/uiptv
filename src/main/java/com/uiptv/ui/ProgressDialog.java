@@ -105,6 +105,12 @@ public class ProgressDialog extends Stage {
         progressBar.prefWidthProperty().bind(scene.widthProperty().subtract(45));
     }
 
+    public void setSelectedDelay(String value) {
+        if (value != null && delayDropdown.getItems().contains(value)) {
+            delayDropdown.setValue(value);
+        }
+    }
+
     public long getSelectedDelayMillis() {
         String selected = delayDropdown.getValue();
         if (selected == null) return 10000; // Default 10s

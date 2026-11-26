@@ -68,6 +68,10 @@ public class XtremeParser {
         }
     }
 
+    public static JSONObject fetchUserInfo(Account account) throws IOException {
+        return new JSONObject(fetchPlayerApi(account, "", null)).optJSONObject("user_info");
+    }
+
     public static List<Category> parseCategories(Account account) {
         try {
             return doParseCategories(fetchPlayerApi(account, getCategoryAction(account.getAction()), null));
