@@ -204,6 +204,12 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    berührt. Kollisions-Schutz: manuelle Pins 1–5 werden nie geändert; Speichern eines Uhr-Pin-Kontos im
    Account-Formular behält Level 6, wenn kein manueller Pin gewählt wurde; „Unpin“ im Kontextmenü setzt 0
    (nächster Scan pinnt ggf. wieder); erneutes Pinnen/Entpinnen läuft über den Scan.
+   d) Der Scan läuft zusätzlich automatisch EINMAL beim App-Start (Daemon-Thread nach Tab-Initialisierung,
+   still im Hintergrund, best-effort — Ausführung wie der manuelle Scan, nur ohne UI-Popup).
+   e) Die Terminal-Befehle `-names`/`-duplicates`/`-expiry` sind Strg+C-sicher: ein Shutdown-Hook
+   (TerminalInterruptGuard) wartet auf das Ende des aktuellen Kontos (max. 30 s, Logzeile
+   „interrupted, exiting after the current account“) und beendet dann sauber; SQLite-Transaktionen
+   garantieren, dass die DB auch bei Abbruch konsistent bleibt.
 
 ## Aktuell offene Punkte / ToDos
 
