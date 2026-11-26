@@ -1291,7 +1291,7 @@ public class ConfigurationUI extends VBox {
         cleanAccountsButton.setMaxWidth(Double.MAX_VALUE);
         cleanAccountsButton.setOnAction(event -> CleanAccountsPopup.showPopup(RootApplication.getPrimaryStage()));
         clearDuplicatesButton.setMaxWidth(Double.MAX_VALUE);
-        clearDuplicatesButton.setOnAction(event -> CleanAccountsPopup.showPopup(RootApplication.getPrimaryStage(), false));
+        clearDuplicatesButton.setOnAction(event -> CleanAccountsPopup.showPopup(RootApplication.getPrimaryStage(), CleanAccountsPopup.Mode.DUPLICATES));
         pinExpiringButton.setMaxWidth(Double.MAX_VALUE);
         pinExpiringButton.setOnAction(event -> CleanAccountsPopup.showPopup(RootApplication.getPrimaryStage(), CleanAccountsPopup.Mode.EXPIRY));
         return new VBox(10, cleanAccountsButton, clearDuplicatesButton, pinExpiringButton);

@@ -356,6 +356,7 @@ public class AccountListUI extends HBox {
             private final SVGPath pinHead = new SVGPath();
             private final Group pinIcon = new Group(pinStem, pinHead);
             private final StackPane pinIconWrapper = new StackPane(pinIcon);
+            private final Label clockGlyph = new Label(AccountResolver.EXPIRY_CLOCK_GLYPH);
             private final Label nameLabel = new Label();
             private final Pane spacer = new Pane();
 
