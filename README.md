@@ -97,10 +97,7 @@ playlists, or other media.**
 - **No content:** the software ships **without any playlists, channels, streams,
   or credentials**. It contains no providers and grants access to nothing.
   Everything the user views must come from accounts and data sources they own
-  or are authorized to use. If you are looking for legal, freely available
-  content, see for example
-  [iptv-org/iptv](https://github.com/iptv-org/iptv) — public playlists of
-  publicly available channels from around the world.
+  or are authorized to use.
 - **No warranty, use at your own risk:** the software may contain bugs. It is
   provided "as is", without any warranty of any kind. The user is responsible
   for possible data loss or other consequences of using it — create backups of
