@@ -651,7 +651,7 @@ public class ChannelListUI extends HBox {
         private final Label progressBadge = new Label(I18n.tr("autoInPROGRESS"));
         private final Pane spacerPane = new Pane();
         private final SVGPath bookmarkIcon = new SVGPath();
-        private final Region thumbnailStandIn = new Region();
+        private final javafx.scene.layout.Region thumbnailStandIn = new javafx.scene.layout.Region();
 
         ChannelNameProbeRow() {
             super(10);
