@@ -169,9 +169,14 @@ public class AccountService {
         SeriesWatchingNowSnapshotDb.get().deleteByAccount(accountId);
         VodWatchStateDb.get().deleteByAccount(accountId);
         ChannelDb.get().deleteByAccount(accountId);
-        CategoryDb.get().deleteByAccount(account);
+        VodChannelDb.get().deleteByAccount(accountId);
+        SeriesChannelDb.get().deleteByAccount(accountId);
+        CategoryDb.get().deleteByAccountId(accountId);
+        VodCategoryDb.get().deleteByAccount(accountId);
+        SeriesCategoryDb.get().deleteByAccount(accountId);
         AccountDb.get().delete(accountId);
         touchChange();
+        DatabaseMaintenance.requestVacuumAsync();
     }
 
     private void touchChange() {

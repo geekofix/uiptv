@@ -90,6 +90,19 @@ public class CategoryDb extends BaseDb {
         }
     }
 
+    public void deleteByAccountId(String accountId) {
+        if (accountId == null || accountId.isBlank()) {
+            return;
+        }
+        String sql = "DELETE FROM " + CATEGORY_TABLE.getTableName() + " WHERE accountId=?";
+        try (Connection conn = connect(); PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, accountId);
+            statement.execute();
+        } catch (SQLException e) {
+            throw new DatabaseAccessException("Unable to execute deleteByAccountId query", e);
+        }
+    }
+
     public void insert(Category category, Account account) {
         try (Connection conn = connect(); PreparedStatement statement = conn.prepareStatement(insertTableSql(CATEGORY_TABLE))) {
             statement.setString(1, category.getCategoryId());

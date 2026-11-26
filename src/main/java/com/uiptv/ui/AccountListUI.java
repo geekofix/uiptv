@@ -6,6 +6,8 @@ import com.uiptv.model.Category;
 import com.uiptv.service.AccountChangeListener;
 import com.uiptv.service.AccountResolver;
 import com.uiptv.service.AccountService;
+import com.uiptv.service.CacheService;
+import com.uiptv.service.CacheServiceImpl;
 import com.uiptv.service.CategoryService;
 import com.uiptv.service.ConfigurationService;
 import com.uiptv.util.I18n;
@@ -39,6 +41,7 @@ import static com.uiptv.model.Account.CACHE_SUPPORTED;
 import static com.uiptv.model.Account.VOD_AND_SERIES_SUPPORTED;
 import static com.uiptv.widget.UIptvAlert.showConfirmationAlert;
 import static com.uiptv.widget.UIptvAlert.showErrorAlert;
+import static com.uiptv.widget.UIptvAlert.showMessageAlert;
 
 public class AccountListUI extends HBox {
     private static final String MULTI_SELECTION_DISABLED_KEY = "autoThisActionIsDisabledForMultipleSelections";
@@ -557,11 +560,14 @@ public class AccountListUI extends HBox {
         MenuItem reloadCache = new MenuItem(I18n.tr("autoReloadCache"));
         reloadCache.setOnAction(_ -> handleReloadCache(row.getItem()));
 
+        MenuItem deleteCache = new MenuItem(I18n.tr("accountListDeleteCache"));
+        deleteCache.setOnAction(_ -> handleDeleteCache());
+
         MenuItem deleteItem = new MenuItem(I18n.tr("autoDeleteAccount"));
         deleteItem.getStyleClass().add("danger-menu-item");
         deleteItem.setOnAction(_ -> handleDeleteAccounts());
 
-        rowMenu.getItems().addAll(editAccount, new SeparatorMenuItem(), itv, vod, series, new SeparatorMenuItem(), pinMenu, new SeparatorMenuItem(), reloadCache, deleteItem);
+        rowMenu.getItems().addAll(editAccount, new SeparatorMenuItem(), itv, vod, series, new SeparatorMenuItem(), pinMenu, new SeparatorMenuItem(), reloadCache, deleteCache, deleteItem);
 
         rowMenu.setOnShowing(_ -> {
             if (row.getItem() != null) {
@@ -578,6 +584,7 @@ public class AccountListUI extends HBox {
 
                 boolean cacheSupported = CACHE_SUPPORTED.contains(account.getType());
                 reloadCache.setVisible(cacheSupported);
+                deleteCache.setVisible(cacheSupported);
             }
         });
 
@@ -585,6 +592,36 @@ public class AccountListUI extends HBox {
                 Bindings.when(row.emptyProperty())
                         .then((ContextMenu) null)
                         .otherwise(rowMenu));
+    }
+
+    private void handleDeleteCache() {
+        List<Account> accounts = new ArrayList<>();
+        LinkedHashSet<String> uniqueAccountIds = new LinkedHashSet<>();
+        for (AccountItem item : table.getSelectionModel().getSelectedItems()) {
+            if (item == null || !uniqueAccountIds.add(item.getAccountId())) {
+                continue;
+            }
+            Account account = accountService.getById(item.getAccountId());
+            if (account != null && CACHE_SUPPORTED.contains(account.getType())) {
+                accounts.add(account);
+            }
+        }
+        if (accounts.isEmpty()) {
+            showErrorAlert(I18n.tr("autoNoCacheSupportedAccountSelected"));
+            return;
+        }
+        isPromptShowing = true;
+        String confirmMessage = I18n.tr("accountListDeleteCacheConfirm", accounts.size());
+        if (!showConfirmationAlert(confirmMessage)) {
+            return;
+        }
+        new Thread(() -> {
+            CacheService cacheService = new CacheServiceImpl();
+            for (Account account : accounts) {
+                cacheService.clearCache(account);
+            }
+            Platform.runLater(() -> showMessageAlert(I18n.tr("autoCacheCleared")));
+        }).start();
     }
 
     private void handleSetPinLevel(int pinLevel) {
