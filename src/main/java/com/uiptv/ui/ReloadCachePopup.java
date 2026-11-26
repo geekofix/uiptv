@@ -1361,15 +1361,16 @@ public class ReloadCachePopup extends VBox {
             Button markBadButton = new Button(I18n.tr("reloadMarkBadAndNext"));
             markBadButton.setMaxWidth(Double.MAX_VALUE);
             markBadButton.setDefaultButton(true);
-            CheckBox rememberMarkBad = new CheckBox(I18n.tr("reloadApplyToRemaining"));
+            markBadButton.setMinHeight(38);
+            final CheckBox rememberMarkBad = new CheckBox(I18n.tr("reloadApplyToRemaining"));
             rememberMarkBad.setWrapText(true);
-            HBox markBadRow = new HBox(8, markBadButton, rememberMarkBad);
-            HBox.setHgrow(markBadButton, Priority.ALWAYS);
+            rememberMarkBad.setMaxWidth(Double.MAX_VALUE);
+            VBox markBadGroup = new VBox(4, markBadButton, rememberMarkBad);
+            VBox.setVgrow(markBadButton, Priority.ALWAYS);
 
             Button stopAllButton = new Button(I18n.tr("reloadStopAll"));
             stopAllButton.setMaxWidth(Double.MAX_VALUE);
-            HBox stopAllRow = new HBox(stopAllButton);
-            HBox.setHgrow(stopAllButton, Priority.ALWAYS);
+            stopAllButton.setMinHeight(38);
 
             markBadButton.setOnAction(_ -> {
                 decision[0] = GlobalFailureDecision.MARK_BAD;
@@ -1383,23 +1384,20 @@ public class ReloadCachePopup extends VBox {
                 dialog.setResult(decision[0]);
             });
 
-            GridPane buttonGrid = new GridPane();
-            buttonGrid.setHgap(10);
-            buttonGrid.setVgap(10);
-            ColumnConstraints leftColumn = new ColumnConstraints();
-            ColumnConstraints rightColumn = new ColumnConstraints();
-            leftColumn.setPercentWidth(50);
-            rightColumn.setPercentWidth(50);
-            buttonGrid.getColumnConstraints().addAll(leftColumn, rightColumn);
-            buttonGrid.add(markBadRow, 0, 0);
-            buttonGrid.add(stopAllRow, 1, 0);
+            List<javafx.scene.Node> actionGroups = new ArrayList<>();
+            actionGroups.add(markBadGroup);
+            Region markBadSpacer = new Region();
+            markBadSpacer.setPrefHeight(10);
+            actionGroups.add(markBadSpacer);
+
             if (canIgnoreDomain) {
                 final Button ignoreDomainButton = new Button(I18n.tr("reloadMarkBadIgnoreDomain"));
                 ignoreDomainButton.setMaxWidth(Double.MAX_VALUE);
+                ignoreDomainButton.setMinHeight(38);
                 final CheckBox rememberIgnoreDomain = new CheckBox(I18n.tr("reloadApplyToRemaining"));
                 rememberIgnoreDomain.setWrapText(true);
-                final HBox ignoreDomainRow = new HBox(8, ignoreDomainButton, rememberIgnoreDomain);
-                HBox.setHgrow(ignoreDomainButton, Priority.ALWAYS);
+                rememberIgnoreDomain.setMaxWidth(Double.MAX_VALUE);
+                VBox ignoreDomainGroup = new VBox(4, ignoreDomainButton, rememberIgnoreDomain);
                 ignoreDomainButton.setOnAction(_ -> {
                     decision[0] = GlobalFailureDecision.MARK_BAD_AND_IGNORE_DOMAIN;
                     if (rememberIgnoreDomain.isSelected()) {
@@ -1407,10 +1405,18 @@ public class ReloadCachePopup extends VBox {
                     }
                     dialog.setResult(decision[0]);
                 });
-                buttonGrid.add(ignoreDomainRow, 0, 1, 2, 1);
+                actionGroups.add(ignoreDomainGroup);
+                Region ignoreDomainSpacer = new Region();
+                ignoreDomainSpacer.setPrefHeight(10);
+                actionGroups.add(ignoreDomainSpacer);
             }
+            actionGroups.add(stopAllButton);
+            javafx.scene.layout.VBox buttonColumn = new javafx.scene.layout.VBox();
+            buttonColumn.getChildren().addAll(actionGroups);
 
-            VBox content = new VBox(14, messageLabel, buttonGrid);
+            javafx.scene.layout.Region topSpacer = new javafx.scene.layout.Region();
+            topSpacer.setPrefHeight(10);
+            VBox content = new VBox(10, messageLabel, topSpacer, buttonColumn);
             content.setPadding(new Insets(4));
             dialog.getDialogPane().setContent(content);
             dialog.getDialogPane().setMinWidth(520);
