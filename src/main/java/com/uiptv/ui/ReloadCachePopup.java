@@ -1174,8 +1174,8 @@ public class ReloadCachePopup extends VBox {
     }
 
     private String resolveCategoryFetchProvider(String trimmed) {
-        if (trimmed.startsWith("Fetching categories from Xtreme API")) {
-            return "Xtreme API";
+        if (trimmed.startsWith("Fetching categories from Xtream API")) {
+            return "Xtream API";
         }
         if (trimmed.startsWith("Fetching categories from Stalker Portal")) {
             return "Stalker Portal";

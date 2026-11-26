@@ -35,11 +35,11 @@ public class XtremePlayerService implements AccountPlayerService {
         }
         String baseUrl = resolveBaseUrl(account);
         if (isBlank(baseUrl)) {
-            com.uiptv.util.AppLog.addWarningLog(XtremePlayerService.class, "Xtreme base URL is blank. Falling back to channel cmd.");
+            com.uiptv.util.AppLog.addWarningLog(XtremePlayerService.class, "Xtream base URL is blank. Falling back to channel cmd.");
             return fallbackCmd;
         }
         if (!hasRequiredParts(account, channel)) {
-            com.uiptv.util.AppLog.addWarningLog(XtremePlayerService.class, "Xtreme URL parts missing (username/password/channelId). Falling back to channel cmd.");
+            com.uiptv.util.AppLog.addWarningLog(XtremePlayerService.class, "Xtream URL parts missing (username/password/channelId). Falling back to channel cmd.");
             return fallbackCmd;
         }
         String extension = inferExtensionFromCmd(fallbackCmd);

@@ -198,7 +198,7 @@ public class XtremeParser {
     private static String fetchPlayerApi(Account account, String action, Map<String, String> extraParams) throws IOException {
         List<String> baseUrlCandidates = baseUrlCandidates(account);
         if (baseUrlCandidates.isEmpty()) {
-            throw new IOException("Xtreme base URL is blank.");
+            throw new IOException("Xtream base URL is blank.");
         }
 
         IOException lastIoException = null;
@@ -213,7 +213,7 @@ public class XtremeParser {
                 lastIoException = toPlayerApiIOException(e);
             }
         }
-        throw lastIoException != null ? lastIoException : new IOException("Failed to call Xtreme API.");
+        throw lastIoException != null ? lastIoException : new IOException("Failed to call Xtream API.");
     }
 
     private static boolean hasMoreBaseUrlCandidates(List<String> baseUrlCandidates, int index) {
@@ -234,14 +234,14 @@ public class XtremeParser {
         if (response.statusCode() == 404 && hasMoreCandidates) {
             return null;
         }
-        throw new IOException("Xtreme API request failed with HTTP " + response.statusCode());
+        throw new IOException("Xtream API request failed with HTTP " + response.statusCode());
     }
 
     private static IOException toPlayerApiIOException(Exception e) {
         if (e instanceof IOException ioException) {
             return ioException;
         }
-        return new IOException("Failed to call Xtreme API: " + e.getMessage(), e);
+        return new IOException("Failed to call Xtream API: " + e.getMessage(), e);
     }
 
     private static String buildPlayerApiUrl(String baseUrl, Account account, String action, Map<String, String> extraParams) {

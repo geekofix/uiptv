@@ -193,7 +193,7 @@ public class CategoryService {
             if (Objects.requireNonNull(account.getType()) == AccountType.M3U8_LOCAL || account.getType() == M3U8_URL) {
                 categories.addAll(m3u8Categories(account));
             } else if (account.getType() == AccountType.XTREME_API) {
-                log(logger, "Fetching categories from Xtreme API...");
+                log(logger, "Fetching categories from Xtream API...");
                 categories.addAll(xtremeAPICategories(account));
             } else if (account.getType() == AccountType.RSS_FEED) {
                 categories.addAll(rssCategories());

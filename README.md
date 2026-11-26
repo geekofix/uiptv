@@ -23,7 +23,7 @@ Linux-only project:** it is built, maintained, and tested on Linux only
 but this fork does not build, verify, or support those platforms — a clean
 Windows or macOS port would require maintainers who can actually test on
 them.
-It supports Xtreme, Stalker Portal, M3U, and RSS — with an embedded player,
+It supports Xtream, Stalker Portal, M3U, and RSS — with an embedded player,
 external players, or a local-network web app.
 
 This fork keeps the classic, low-friction desktop UI and adds its own improvements,

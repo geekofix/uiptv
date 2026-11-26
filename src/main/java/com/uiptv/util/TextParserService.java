@@ -13,7 +13,7 @@ public class TextParserService {
     }
 
     public static final String MODE_STALKER = "Stalker Portal";
-    public static final String MODE_XTREME = "Xtreme";
+    public static final String MODE_XTREME = "Xtream";
     public static final String MODE_M3U = "M3U Playlists";
 
     public static List<Account> saveBulkAccounts(String text, String mode, boolean groupAccountsByMac, boolean convertM3uToXtreme) {
