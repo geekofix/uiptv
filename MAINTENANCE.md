@@ -137,6 +137,15 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    keine Inhalte/Playlists, Nutzung auf eigene Gefahr ohne Gewähr, Einhaltung der Gesetze des jeweiligen Landes,
    keine Verantwortung für Nutzung durch Dritte.
 
+12. **Namenskorrektur „Xtream“ (Version 0.1.13):** Der Ökosystem-Begriff ist Xtream (von stream), der
+   Upstream-Autor schrieb historisch „Xtreme“. Alle NUTZER-SICHTBAREN Texte wurden auf „Xtream“ korrigiert:
+   Accounttyp-Anzeige „Xtream API“, Import-Modus-Combo, Logs, Fehlermeldungen, alle 28 Übersetzungsdateien,
+   README (inkl. Formulierung „It supports Xtream, Stalker Portal, M3U, and RSS …“). I interne Java-Klassennamen
+   (XtremeParser, XtremeCredentialsJson, MODE_XTREME-Konstante etc.) und i18n-Schlüssel (Kleinschreibung
+   „xtreme…“) bleiben unverändert — kein Risiko, kein Renewame-Aufwand. Repo-Topics konnte der Agent nicht
+   setzen (403, fehlende Admin-Rechte der Integration) — Nutzer setzt sie selbst; statt „xtreme“ bitte
+   „xtream-codes“ verwenden (wie bei IPTVNator).
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,
