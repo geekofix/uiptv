@@ -180,6 +180,13 @@ public class ProgressDialog extends Stage {
     }
 
     private HBox buildStatusPaneButtons() {
+        javafx.scene.control.CheckBox selectAllCheckBox = new javafx.scene.control.CheckBox(I18n.tr("verifySelectAll"));
+        selectAllCheckBox.setOnAction(event -> {
+            boolean select = selectAllCheckBox.isSelected();
+            statusCheckBoxes.forEach(checkBox -> checkBox.setSelected(select));
+            deleteSelectedButton.disableProperty().set(!select && statusCheckBoxes.stream()
+                    .noneMatch(javafx.scene.control.CheckBox::isSelected));
+        });
         deleteSelectedButton.disableProperty().set(true);
         deleteSelectedButton.setOnAction(event -> {
             List<Account> selectedAccounts = statusCheckBoxes.stream()
@@ -191,7 +198,7 @@ public class ProgressDialog extends Stage {
                 onDeleteSelectedAccounts.accept(selectedAccounts);
             }
         });
-        return new HBox(10, deleteSelectedButton, buildCopyButton(statusLines), buildExportButton(statusLines, "uiptv_verify_status_"));
+        return new HBox(10, selectAllCheckBox, deleteSelectedButton, buildCopyButton(statusLines), buildExportButton(statusLines, "uiptv_verify_status_"));
     }
 
     private Button buildCopyButton(List<String> lines) {
