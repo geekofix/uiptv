@@ -103,6 +103,15 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    nutzt jetzt das aktive Theme-Stylesheet inkl. UI-Zoom, damit die längsten Namen wirklich vollständig
    hineinpassen.
 
+9. **Reload-Fehler-Dialog neu (Version 0.1.13):** Das Popup bei globalen Abruf-Fehlern ist neu gebaut:
+   „Carry On“ wurde ENTFERNT (lud bei toten Portalen stur Kategorie für Kategorie und endete trotzdem in
+   Fehlern). Der Dialog ist jetzt schmal (~560 px): Informationen oben, darunter ein 2×2-Raster gleichgroßer
+   Buttons („Als schlecht markieren & Weiter“, „Stop all“, Domänen-Variante). Neben beiden Mark-Bad-Optionen
+   gibt es je eine Checkbox „Für alle weiteren Fehler übernehmen“ — ist sie gesetzt, gelten weitere
+   Fehler-Popups des gesamten Durchlaufs automatisch (sichtbar als Logzeile im Reload-Fenster), ohne
+   Nachfragen. „Stop all“ ohne Checkbox. Schließen mit X/Esc = Stop all. „Mark Bad & Next“ ist der
+   Standard-Button (Enter).
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,
