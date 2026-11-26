@@ -176,6 +176,14 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    toleriert Leerzeichen am Rand/im Namen. `de.test.eu (0030) -> de.test.eu (0029)` im Clean-Popup war KEIN Rename,
    sondern die Dupletten-Löschung (gelöscht: (0030), behalten: (0029)) — Dupletten-Erkennung funktioniert also.
 
+16. **Duplikat-Werkzeuge (Version 0.1.13):** a) Terminal: `uiptv -duplicates` entfernt exakte Dupletten
+   (Stalker Server+MAC inkl. MAC-Liste, Xtream Server+Zugangsdaten inkl. Credentials-JSON, M3U identischer
+   Pfad) mit Fortschrittsanzeige; `uiptv -names` bleibt unverändert. b) Settings → „Account Maintenance“ hat
+   jetzt ZWEI Buttons: „Clean Accounts“ (Namen normalisieren + Dupletten, wie bisher) und „Clear Duplicates“
+   (nur Dupletten); beide nutzen dasselbe Popup (Fortschritt, Restzeit, Copy/Export Log, Stop nach aktuellem
+   Schritt, abschließendes debounced VACUUM). c) Import-Duplikat-Schutz vergleicht jetzt auch MAC-Listen und
+   Xtream-Credentials-JSON (nicht nur primäre Werte).
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,

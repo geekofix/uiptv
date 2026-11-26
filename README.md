@@ -42,6 +42,10 @@ Prebuilt packages are built automatically by GitHub Actions on every change
 - **Rename imported accounts to the current scheme** (e.g. after restoring an
   old database) with the terminal command `uiptv -names`. It shows live
   progress and exits without starting the app.
+- **Remove duplicate accounts** (same server+MAC or same server+credentials)
+  with the terminal command `uiptv -duplicates`. It shows live progress and
+  exits without starting the app; the same cleanup also runs from the
+  "Account Maintenance" section in the settings.
 - **Other systems:** not provided by this fork. It is Linux-only — see the
   note above. Use the upstream project if you need Windows or macOS builds
   or try building from source at your own risk.
