@@ -93,9 +93,13 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    NUN WIRKLICH automatisch: `AccountInfoService.save` benachrichtigt Listener, `ManageAccountUI` horcht
    darauf (Grund für den vorherigen Fehlschlag: der Reload-Popup-Callback lief nur beim Löschen von Accounts).
    b) Backfill der Zählwerte nutzt jetzt 4 gruppierte Sammel-Abfragen (je eine für ALLE Accounts) statt 4
-   Abfragen pro Account — auch auf einer 7-GB-DB in Sekunden statt Minuten. c) Senderliste: passt die Spalte
-   an die Viewport-Breite an, solange der längste Name hineinpasst (keine Trennlinie/leerer Bereich mehr);
-   erst wenn der längste Name breiter ist, wird die Spalte namenslang und die horizontale Scrollleiste kommt.
+   Abfragen pro Account — auch auf einer 7-GB-DB in Sekunden statt Minuten; der Backfill läuft STILL und
+   wird komplett übersprungen, wenn keine Account-Zahlen fehlen (kein Flackern der Account-Info-Anzeige
+   mehr, keine Abfragen bei jedem Start). c) Senderliste: passt die Spalte an die Viewport-Breite an,
+   solange der längste Name hineinpasst (keine Trennlinie/leerer Bereich mehr); erst wenn der längste Name
+   breiter ist, wird die Spalte namenslang und die horizontale Scrollleiste kommt. Die Breitenmessung
+   nutzt jetzt das aktive Theme-Stylesheet inkl. UI-Zoom, damit die längsten Namen wirklich vollständig
+   hineinpassen.
 
 ## Aktuell offene Punkte / ToDos
 
