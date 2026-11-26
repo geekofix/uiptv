@@ -1,5 +1,6 @@
 package com.uiptv.ui;
 
+import com.uiptv.model.Account;
 import com.uiptv.util.I18n;
 
 import com.uiptv.widget.SegmentedProgressBar;
@@ -32,12 +33,19 @@ import javafx.stage.Stage;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 public class ProgressDialog extends Stage {
     private static final String LOG_TEXT_STYLE_CLASS = "log-text";
     private final List<String> logLines = new ArrayList<>();
     private final List<String> statusLines = new ArrayList<>();
+    private final Map<javafx.scene.control.CheckBox, Account> statusAccounts = new LinkedHashMap<>();
+    private final List<javafx.scene.control.CheckBox> statusCheckBoxes = new ArrayList<>();
+    private final Button deleteSelectedButton = new Button(I18n.tr("verifyDeleteSelected"));
+    private Consumer<List<Account>> onDeleteSelectedAccounts;
 
     private final SegmentedProgressBar progressBar = new SegmentedProgressBar();
     private final VBox messageContainer = new VBox();
@@ -172,7 +180,18 @@ public class ProgressDialog extends Stage {
     }
 
     private HBox buildStatusPaneButtons() {
-        return new HBox(10, buildCopyButton(statusLines), buildExportButton(statusLines, "uiptv_verify_status_"));
+        deleteSelectedButton.disableProperty().set(true);
+        deleteSelectedButton.setOnAction(event -> {
+            List<Account> selectedAccounts = statusCheckBoxes.stream()
+                    .filter(javafx.scene.control.CheckBox::isSelected)
+                    .map(statusAccounts::get)
+                    .distinct()
+                    .toList();
+            if (!selectedAccounts.isEmpty() && onDeleteSelectedAccounts != null) {
+                onDeleteSelectedAccounts.accept(selectedAccounts);
+            }
+        });
+        return new HBox(10, deleteSelectedButton, buildCopyButton(statusLines), buildExportButton(statusLines, "uiptv_verify_status_"));
     }
 
     private Button buildCopyButton(List<String> lines) {
@@ -224,11 +243,22 @@ public class ProgressDialog extends Stage {
         });
     }
 
-    public void addStatusText(String text) {
+    public void setOnDeleteSelectedAccounts(Consumer<List<Account>> consumer) {
+        this.onDeleteSelectedAccounts = consumer;
+    }
+
+    public void addProblemEntry(Account account, String label, String message) {
         Platform.runLater(() -> {
             statusPane.setVisible(true);
-            statusLines.add(text);
-            statusContainer.getChildren().add(createStyledText(text));
+            String line = account.getAccountName() + " — " + label + " — " + message;
+            statusLines.add(line);
+            javafx.scene.control.CheckBox checkBox = new javafx.scene.control.CheckBox();
+            statusAccounts.put(checkBox, account);
+            statusCheckBoxes.add(checkBox);
+            checkBox.setOnAction(event -> deleteSelectedButton.disableProperty().set(
+                    statusCheckBoxes.stream().noneMatch(javafx.scene.control.CheckBox::isSelected)));
+            HBox entry = new HBox(8, checkBox, createStyledText(line));
+            statusContainer.getChildren().add(entry);
         });
     }
 

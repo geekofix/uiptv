@@ -711,10 +711,11 @@ public class AccountListUI extends HBox {
 
         AtomicBoolean stopRequested = new AtomicBoolean(false);
 
-        Task<List<Account>> task = new Task<>() {
+        progressDialog.setOnDeleteSelectedAccounts(this::deleteVerifiedAccounts);
+
+        Task<Void> task = new Task<>() {
             @Override
-            protected List<Account> call() {
-                List<Account> fullyInvalidAccounts = new ArrayList<>();
+            protected Void call() {
                 int totalChecks = accounts.stream().mapToInt(verificationService::checkCount).sum();
                 progressDialog.setTotal(Math.max(totalChecks, 1));
                 for (int accountIndex = 0; accountIndex < accounts.size(); accountIndex++) {
@@ -724,63 +725,39 @@ public class AccountListUI extends HBox {
                     Account account = accounts.get(accountIndex);
                     progressDialog.addProgressText(I18n.tr("verifyAccountProgress", accountIndex + 1, accounts.size(), account.getAccountName()));
                     List<AccountVerificationService.CredentialCheck> checks = verificationService.verifyAccount(account);
-                    boolean anyValid = false;
-                    boolean anyServerError = false;
-                    boolean allChecksCompleted = !checks.isEmpty();
                     for (int checkIndex = 0; checkIndex < checks.size(); checkIndex++) {
                         if (isVerificationStopped(stopRequested)) {
-                            allChecksCompleted = false;
                             break;
                         }
                         AccountVerificationService.CredentialCheck check = checks.get(checkIndex);
                         progressDialog.addProgressText(I18n.tr("manageVerifyingMacProgress", checkIndex + 1, checks.size(), check.label()));
                         if (check.serverError()) {
-                            anyServerError = true;
                             progressDialog.addErrorResult();
                             progressDialog.addProgressText(I18n.tr("verifyResultError", check.errorMessage()));
-                            progressDialog.addStatusText(account.getAccountName() + " — " + check.label() + " — " + check.errorMessage());
+                            progressDialog.addProblemEntry(account, check.label(), check.errorMessage());
+                        } else if (check.valid()) {
+                            progressDialog.addResult(true);
+                            progressDialog.addProgressText(I18n.tr("manageResultValid"));
                         } else {
-                            progressDialog.addResult(check.valid());
-                            progressDialog.addProgressText(I18n.tr(check.valid() ? "manageResultValid" : "manageResultInvalid"));
+                            progressDialog.addResult(false);
+                            progressDialog.addProgressText(I18n.tr("manageResultInvalid"));
+                            progressDialog.addProblemEntry(account, check.label(), I18n.tr("manageResultInvalid"));
                         }
                         progressDialog.addProgressText(I18n.tr("manageAccountInfoExpireDate") + ": " + check.expireDate());
                         progressDialog.addProgressText(I18n.tr("manageAccountInfoStatus") + ": " + check.accountStatus());
-                        anyValid = anyValid || check.valid();
                         if (checkIndex < checks.size() - 1) {
                             pauseBetweenChecks(progressDialog, stopRequested);
                         }
                     }
-                    if (allChecksCompleted && !anyValid && !anyServerError) {
-                        fullyInvalidAccounts.add(account);
-                    }
                 }
-                return fullyInvalidAccounts;
+                return null;
             }
         };
 
         progressDialog.setOnClose(task::cancel);
         progressDialog.setOnStop(() -> stopRequested.set(true));
 
-        task.setOnSucceeded(e -> {
-            List<Account> invalidAccounts = task.getValue();
-            if (!invalidAccounts.isEmpty()) {
-                progressDialog.addProgressText(I18n.tr("verifyInvalidAccountsFound", invalidAccounts.size()));
-                String confirmMessage = I18n.tr("verifyDeleteInvalidAccountsConfirm", invalidAccounts.size(),
-                        invalidAccounts.stream().map(Account::getAccountName).collect(Collectors.joining(", ")));
-                isPromptShowing = true;
-                if (showConfirmationAlert(confirmMessage)) {
-                    for (Account account : invalidAccounts) {
-                        AccountService.getInstance().delete(account.getDbId());
-                        if (onDeleteCallback != null) {
-                            onDeleteCallback.call(accountService.getById(account.getDbId()));
-                        }
-                    }
-                    com.uiptv.db.DatabaseMaintenance.requestVacuumAsync();
-                    refresh();
-                }
-            }
-            progressDialog.markCompleted();
-        });
+        task.setOnSucceeded(e -> progressDialog.markCompleted());
 
         task.setOnFailed(e -> {
             progressDialog.addProgressText(I18n.tr("autoVerificationFailed", task.getException().getMessage()));
@@ -794,6 +771,25 @@ public class AccountListUI extends HBox {
         });
 
         new Thread(task).start();
+    }
+
+    private void deleteVerifiedAccounts(List<Account> accountsToDelete) {
+        if (accountsToDelete == null || accountsToDelete.isEmpty()) {
+            return;
+        }
+        String confirmMessage = I18n.tr("verifyDeleteInvalidAccountsConfirm", accountsToDelete.size(),
+                accountsToDelete.stream().map(Account::getAccountName).collect(Collectors.joining(", ")));
+        isPromptShowing = true;
+        if (showConfirmationAlert(confirmMessage)) {
+            for (Account account : accountsToDelete) {
+                AccountService.getInstance().delete(account.getDbId());
+                if (onDeleteCallback != null) {
+                    onDeleteCallback.call(accountService.getById(account.getDbId()));
+                }
+            }
+            com.uiptv.db.DatabaseMaintenance.requestVacuumAsync();
+            refresh();
+        }
     }
 
     private boolean isVerificationStopped(AtomicBoolean stopRequested) {
