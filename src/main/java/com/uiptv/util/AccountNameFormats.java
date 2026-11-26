@@ -29,11 +29,12 @@ public final class AccountNameFormats {
         if (StringUtils.isBlank(accountName)) {
             return null;
         }
-        Matcher spaced = SPACED_SUFFIX.matcher(accountName);
+        String normalized = accountName.strip().replaceAll("\\s+", " ");
+        Matcher spaced = SPACED_SUFFIX.matcher(normalized);
         if (spaced.matches()) {
             return new SuffixMatch(spaced.group(1).trim(), Integer.parseInt(spaced.group(2)), true);
         }
-        Matcher compact = LEGACY_COMPACT_SUFFIX.matcher(accountName);
+        Matcher compact = LEGACY_COMPACT_SUFFIX.matcher(normalized);
         if (compact.matches()) {
             return new SuffixMatch(compact.group(1).trim(), Integer.parseInt(compact.group(2)), false);
         }
@@ -92,17 +93,25 @@ public final class AccountNameFormats {
                 }
             }
 
+            Set<Integer> takenNumbers = new TreeSet<>();
             int number = 0;
             for (Account account : group) {
-                SuffixMatch match = matchSuffix(account.getAccountName());
-                if (match != null) {
+                String currentName = account.getAccountName();
+                SuffixMatch match = matchSuffix(currentName);
+                if (match == null) {
+                    // Plain (e.g. grouped) accounts intentionally keep their bare name.
+                    processedAccounts++;
+                    listener.onProgress(processedAccounts, totalAccounts, renamed);
+                    continue;
+                }
+                if (!takenNumbers.contains(match.number())) {
                     number = match.number();
                 } else {
-                    number = freeNumber(usedNumbers, number + 1);
+                    number = freeNumber(usedNumbers, Math.max(number, 1) + 1);
                 }
-                String currentName = account.getAccountName();
-                String newName = formatAccountName(baseName, number);
+                takenNumbers.add(number);
                 usedNumbers.add(number);
+                String newName = formatAccountName(baseName, number);
                 if (!newName.equals(currentName) && accountDb.getAccountByName(newName) == null) {
                     accountDb.updateAccountName(account, newName);
                     renamed++;
