@@ -122,7 +122,7 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    wirkt auf alle markierten Accounts (mit Bestätigungsdialog und Hintergrund-Ausführung). b) BUGFIX Account-Löschung:
    `AccountService.deleteAccountData` löschte VOD/Serien-Kanäle und -Kategorien (VodChannelDb, SeriesChannelDb,
    VodCategoryDb, SeriesCategoryDb) NIE und beim Live-Category-Filter blieben Zeilen anderer accountType übrig —
-   die uiptv.db wuchsdaher dauerhaft weiter. Jetzt werden alle Cache-Tabellen des Accounts geleert.
+   die uiptv.db wuchs daher dauerhaft weiter. Jetzt werden alle Cache-Tabellen des Accounts geleert.
    c) SQLite gibt Dateigröße nur per VACUUM frei — neue Klasse `DatabaseMaintenance` führt nach Account-Löschung
    und Cache-Löschung (debounced, im Hintergrund) ein VACUUM aus, damit die Datei real schrumpft. VACUUM-Fehler
    werden nur geloggt (best-effort, nie blockierend).
