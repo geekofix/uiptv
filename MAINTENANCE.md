@@ -127,6 +127,16 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    und Cache-Löschung (debounced, im Hintergrund) ein VACUUM aus, damit die Datei real schrumpft. VACUUM-Fehler
    werden nur geloggt (best-effort, nie blockierend).
 
+11. **Export Log, Ablauf-Indikator, README-Disclaimer (Version 0.1.13):** a) Im Reload-Popup neben „Copy Log“
+   neuer Button „Export Log“: speichert denselben Text als Datei, Dateiname vorgefertigt als
+   `uiptv_export_log_YYYY_MM_DD_HH_MM_SS.txt` (Zeitstempel = Moment des Speicherns). b) Account-Spalte:
+   Accountnamen werden AMBER gefärbt, wenn das Ablaufdatum ≤ 7 Tage entfernt ist, ROT bei bereits abgelaufen
+   (Datenbasis: gecachtes AccountInfo.expireDate, Auswertung beim Refresh); Tooltip mit dem Ablaufdatum auf dem
+   Namen. KEIN Backup-Mechanismus eingebaut (Nutzer-Entscheidung: Backup manuell, weil er selbst über die
+   Notwendigkeit entscheiden will). c) README um Abschnitt „Purpose and disclaimer“ ergänzt: Schulungsprojekt,
+   keine Inhalte/Playlists, Nutzung auf eigene Gefahr ohne Gewähr, Einhaltung der Gesetze des jeweiligen Landes,
+   keine Verantwortung für Nutzung durch Dritte.
+
 ## Aktuell offene Punkte / ToDos
 
 - [x] Feature-Wunsch 1: Pin 1–5 mit Unterreitern im Account-Tab — umgesetzt in 0.1.12,
