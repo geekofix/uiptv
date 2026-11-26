@@ -37,8 +37,14 @@ public class AccountInfoService {
     }
 
     public void save(AccountInfo info) {
+        save(info, true);
+    }
+
+    private void save(AccountInfo info, boolean notify) {
         AccountInfoDb.get().save(info);
-        changeListeners.forEach(Runnable::run);
+        if (notify) {
+            changeListeners.forEach(Runnable::run);
+        }
     }
 
     public void addChangeListener(Runnable listener) {
@@ -56,10 +62,7 @@ public class AccountInfoService {
     public void backfillMissingCountsAsync() {
         Thread thread = new Thread(() -> {
             try {
-                Map<String, Integer> liveCounts = ChannelDb.get().getChannelCountByAccount();
-                Map<String, Integer> vodCounts = VodChannelDb.get().getChannelCountByAccount();
-                Map<String, Integer> seriesCounts = SeriesChannelDb.get().getChannelCountByAccount();
-                Map<String, Integer> categoryCounts = CategoryDb.get().getCountByAccount();
+                Map<String, AccountInfo> infoByAccountId = new java.util.LinkedHashMap<>();
                 for (Account account : AccountService.getInstance().getAll().values()) {
                     String accountId = account == null ? null : account.getDbId();
                     if (isBlank(accountId)) {
@@ -73,11 +76,23 @@ public class AccountInfoService {
                         info = new AccountInfo();
                         info.setAccountId(accountId);
                     }
+                    infoByAccountId.put(accountId, info);
+                }
+                if (infoByAccountId.isEmpty()) {
+                    return;
+                }
+                Map<String, Integer> liveCounts = ChannelDb.get().getChannelCountByAccount();
+                Map<String, Integer> vodCounts = VodChannelDb.get().getChannelCountByAccount();
+                Map<String, Integer> seriesCounts = SeriesChannelDb.get().getChannelCountByAccount();
+                Map<String, Integer> categoryCounts = CategoryDb.get().getCountByAccount();
+                for (Map.Entry<String, AccountInfo> entry : infoByAccountId.entrySet()) {
+                    String accountId = entry.getKey();
+                    AccountInfo info = entry.getValue();
                     info.setLiveCount(liveCounts.getOrDefault(accountId, 0));
                     info.setVodCount(vodCounts.getOrDefault(accountId, 0));
                     info.setSeriesCount(seriesCounts.getOrDefault(accountId, 0));
                     info.setCategoriesCount(categoryCounts.getOrDefault(accountId, 0));
-                    save(info);
+                    save(info, false);
                 }
             } catch (Exception _) {
                 // Backfill is best-effort; counts refresh anyway on the next cache reload.

@@ -613,6 +613,12 @@ public class ChannelListUI extends HBox {
             channelWidthProbe = new Label();
             channelWidthProbe.getStyleClass().add("table-cell");
             widthProbeScene = new javafx.scene.Scene(new javafx.scene.Group(channelWidthProbe));
+            if (com.uiptv.ui.RootApplication.getCurrentTheme() != null) {
+                widthProbeScene.getStylesheets().add(com.uiptv.ui.RootApplication.getCurrentTheme());
+            }
+            int zoomPercent = com.uiptv.service.ConfigurationService.getInstance().getUiZoomPercent();
+            widthProbeScene.getRoot().setStyle(com.uiptv.util.ThemeStylesheetResolver.buildSceneRootStyle(zoomPercent));
+            widthProbeScene.getRoot().applyCss();
             channelWidthProbe.applyCss();
         }
         double measured = channelName.getMinWidth();
@@ -628,7 +634,7 @@ public class ChannelListUI extends HBox {
                 measured = width;
             }
         }
-        double padding = 20 + (thumbnailsEnabled ? 64 : 0);
+        double padding = 20 + measured * 0.02 + (thumbnailsEnabled ? 64 : 0);
         channelName.setPrefWidth(Math.min(measured + padding, MAX_CHANNEL_COLUMN_WIDTH));
     }
 
