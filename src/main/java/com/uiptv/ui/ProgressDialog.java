@@ -79,7 +79,6 @@ public class ProgressDialog extends Stage {
         scrollPane.getStyleClass().add("log-scroll-pane");
         scrollPane.setFitToWidth(true);
         messageContainer.getStyleClass().add("log-message-container");
-        messageContainer.heightProperty().addListener((observable, oldValue, newValue) -> scrollPane.setVvalue(1.0));
         
         // Bottom Bar (Bottom)
         cancelButton.getStyleClass().add("dialog-button");
@@ -109,7 +108,6 @@ public class ProgressDialog extends Stage {
 
         // Server Status Pane (hidden until the first server error is reported)
         statusContainer.getStyleClass().add("log-message-container");
-        statusContainer.heightProperty().addListener((observable, oldValue, newValue) -> statusScrollPane.setVvalue(1.0));
         statusScrollPane.getStyleClass().add("log-scroll-pane");
         statusScrollPane.setFitToWidth(true);
         statusPane.setVisible(false);
@@ -241,13 +239,21 @@ public class ProgressDialog extends Stage {
 
     public void addProgressText(String text) {
         Platform.runLater(() -> {
+            boolean pinnedToBottom = isPinnedToBottom(scrollPane);
             if (text.startsWith("[UPDATE_LAST]")) {
                 updateLastLine(text.substring(13));
             } else {
                 logLines.add(text);
                 messageContainer.getChildren().add(createStyledText(text));
             }
+            if (pinnedToBottom) {
+                scrollPane.setVvalue(1.0);
+            }
         });
+    }
+
+    private boolean isPinnedToBottom(ScrollPane pane) {
+        return pane.getVmax() == 0 || pane.getVvalue() >= 0.99;
     }
 
     public void setOnDeleteSelectedAccounts(Consumer<List<Account>> consumer) {
@@ -257,6 +263,7 @@ public class ProgressDialog extends Stage {
     public void addProblemEntry(Account account, String label, String message) {
         Platform.runLater(() -> {
             statusPane.setVisible(true);
+            boolean pinnedToBottom = isPinnedToBottom(statusScrollPane);
             statusLines.add(account.getAccountName() + " — " + label + " — " + message);
             StatusGroup group = statusGroups.computeIfAbsent(message, this::createStatusGroup);
             javafx.scene.control.CheckBox checkBox = new javafx.scene.control.CheckBox();
@@ -270,6 +277,9 @@ public class ProgressDialog extends Stage {
             HBox entry = new HBox(8, checkBox, createStyledText(account.getAccountName() + " — " + label));
             group.entryBox.getChildren().add(entry);
             group.countLabel.setText("(" + group.entries.size() + ")");
+            if (pinnedToBottom) {
+                statusScrollPane.setVvalue(1.0);
+            }
         });
     }
 
