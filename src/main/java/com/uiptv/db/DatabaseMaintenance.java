@@ -37,6 +37,11 @@ public class DatabaseMaintenance {
     private static void vacuum() {
         try (Connection conn = SQLConnection.connect(); Statement statement = conn.createStatement()) {
             statement.execute("VACUUM");
+            try {
+                statement.execute("PRAGMA wal_checkpoint(TRUNCATE)");
+            } catch (SQLException _) {
+                // Checkpoint is best-effort; a busy WAL just keeps its size until the next run.
+            }
             AppLog.addInfoLog(DatabaseMaintenance.class, "Database vacuum completed.");
         } catch (SQLException e) {
             AppLog.addErrorLog(DatabaseMaintenance.class, "Database vacuum failed: " + e.getMessage());
