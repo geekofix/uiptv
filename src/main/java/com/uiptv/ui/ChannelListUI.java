@@ -480,6 +480,7 @@ public class ChannelListUI extends HBox {
                 }
 
                 nameLabel.setText(item);
+                setText(null);
                 setTooltip(createChannelTooltip(item));
                 boolean drmProtected = channelItem.getChannel() != null && PlayerService.getInstance().isDrmProtected(channelItem.getChannel());
                 drmBadge.setVisible(drmProtected);
@@ -540,6 +541,7 @@ public class ChannelListUI extends HBox {
                 }
 
                 nameLabel.setText(item);
+                setText(null);
                 setTooltip(createChannelTooltip(item));
                 boolean drmProtected = channelItem.getChannel() != null && PlayerService.getInstance().isDrmProtected(channelItem.getChannel());
                 drmBadge.setVisible(drmProtected);
@@ -605,80 +607,97 @@ public class ChannelListUI extends HBox {
     }
 
     private static final double MAX_CHANNEL_COLUMN_WIDTH = 1600;
-    private Label channelWidthProbe;
-    private Label drmBadgeProbe;
-    private Label progressBadgeProbe;
+    private ChannelNameProbeRow widthProbeRow;
     private javafx.scene.Scene widthProbeScene;
 
-    private static final double CELL_HBOX_SPACING = 10;
-    private static final double RECT_BADGE_ALLOWANCE = 16;
-    private static final double THUMBNAIL_WIDTH = 48;
-
     private void updateChannelColumnWidth() {
-        if (channelWidthProbe == null) {
-            channelWidthProbe = new Label();
-            channelWidthProbe.getStyleClass().add("table-cell");
-            widthProbeScene = new javafx.scene.Scene(new javafx.scene.Group(channelWidthProbe));
+        if (widthProbeScene == null) {
+            widthProbeScene = new javafx.scene.Scene(new javafx.scene.Group());
             if (com.uiptv.ui.RootApplication.getCurrentTheme() != null) {
                 widthProbeScene.getStylesheets().add(com.uiptv.ui.RootApplication.getCurrentTheme());
             }
             int zoomPercent = com.uiptv.service.ConfigurationService.getInstance().getUiZoomPercent();
             widthProbeScene.getRoot().setStyle(com.uiptv.util.ThemeStylesheetResolver.buildSceneRootStyle(zoomPercent));
+        }
+        if (widthProbeRow == null) {
+            widthProbeRow = new ChannelNameProbeRow();
+            ((javafx.scene.Group) widthProbeScene.getRoot()).getChildren().add(widthProbeRow);
             widthProbeScene.getRoot().applyCss();
-            channelWidthProbe.applyCss();
+            widthProbeRow.applyCss();
         }
         double measured = channelName.getMinWidth();
         boolean thumbnailsEnabled = ThumbnailAwareUI.areThumbnailsEnabled();
-        ensureBadgeProbes();
-        drmBadgeProbe.setText(I18n.tr("autoDrm"));
-        progressBadgeProbe.setText(I18n.tr("autoInPROGRESS"));
-        double drmBadgeWidth = drmBadgeProbe.prefWidth(-1);
-        double progressBadgeWidth = progressBadgeProbe.prefWidth(-1);
-        boolean seriesAction = account.getAction() == Account.AccountAction.series;
+        widthProbeRow.prepare(thumbnailsEnabled);
         for (ChannelItem item : channelItems) {
             String itemText = item.getChannelName();
             if (itemText == null || itemText.isBlank()) {
                 continue;
             }
-            channelWidthProbe.setText(itemText);
-            double width = channelWidthProbe.prefWidth(-1);
-            int children = 2;
-            if (thumbnailsEnabled) {
-                width += THUMBNAIL_WIDTH;
-                children++;
-            }
             com.uiptv.model.Channel channel = item.getChannel();
-            if (channel != null && PlayerService.getInstance().isDrmProtected(channel)) {
-                width += drmBadgeWidth;
-                children++;
-            }
-            if (seriesAction && channel != null && channel.isWatched()) {
-                width += progressBadgeWidth;
-                children++;
-            }
-            if (item.isBookmarked()) {
-                width += RECT_BADGE_ALLOWANCE;
-                children++;
-            }
-            width += CELL_HBOX_SPACING * (children - 1);
+            boolean drmProtected = channel != null && PlayerService.getInstance().isDrmProtected(channel);
+            boolean inProgress = account.getAction() == Account.AccountAction.series && channel != null && channel.isWatched();
+            double width = widthProbeRow.measureRow(itemText, drmProtected, inProgress, item.isBookmarked());
             if (width > measured) {
                 measured = width;
             }
         }
-        channelName.setPrefWidth(Math.min(measured * 1.02 + 6, MAX_CHANNEL_COLUMN_WIDTH));
+        widthProbeRow.reset();
+        channelName.setPrefWidth(Math.min(measured + 8, MAX_CHANNEL_COLUMN_WIDTH));
     }
 
-    private void ensureBadgeProbes() {
-        if (drmBadgeProbe != null) {
-            return;
+    private class ChannelNameProbeRow extends javafx.scene.layout.HBox {
+        private final Label nameLabel = new Label();
+        private final Label drmBadge = new Label(I18n.tr("autoDrm"));
+        private final Label progressBadge = new Label(I18n.tr("autoInPROGRESS"));
+        private final Pane spacerPane = new Pane();
+        private final SVGPath bookmarkIcon = new SVGPath();
+        private final Region thumbnailStandIn = new Region();
+
+        ChannelNameProbeRow() {
+            super(10);
+            bookmarkIcon.setContent("M3 0 V14 L8 10 L13 14 V0 H3 Z");
+            drmBadge.getStyleClass().add(DRM_BADGE_STYLE_CLASS);
+            progressBadge.getStyleClass().add(DRM_BADGE_STYLE_CLASS);
+            thumbnailStandIn.setPrefSize(48, 48);
+            thumbnailStandIn.setMinSize(48, 48);
         }
-        drmBadgeProbe = new Label();
-        drmBadgeProbe.getStyleClass().add(DRM_BADGE_STYLE_CLASS);
-        progressBadgeProbe = new Label();
-        progressBadgeProbe.getStyleClass().add(DRM_BADGE_STYLE_CLASS);
-        if (widthProbeScene != null && widthProbeScene.getRoot() instanceof javafx.scene.Group group) {
-            group.getChildren().addAll(drmBadgeProbe, progressBadgeProbe);
-            group.applyCss();
+
+        void prepare(boolean thumbnailsEnabled) {
+            drmBadge.setVisible(false);
+            drmBadge.setManaged(false);
+            progressBadge.setVisible(false);
+            progressBadge.setManaged(false);
+            bookmarkIcon.setVisible(false);
+            bookmarkIcon.setManaged(false);
+            getChildren().clear();
+            javafx.collections.ObservableList<javafx.scene.Node> children = getChildren();
+            if (thumbnailsEnabled) {
+                children.add(thumbnailStandIn);
+            }
+            children.addAll(nameLabel, drmBadge, progressBadge, spacerPane, bookmarkIcon);
+        }
+
+        double measureRow(String text, boolean drmProtected, boolean inProgress, boolean bookmarked) {
+            nameLabel.setText(text);
+            drmBadge.setVisible(drmProtected);
+            drmBadge.setManaged(drmProtected);
+            progressBadge.setVisible(inProgress);
+            progressBadge.setManaged(inProgress);
+            bookmarkIcon.setVisible(bookmarked);
+            bookmarkIcon.setManaged(bookmarked);
+            applyCss();
+            layout();
+            return prefWidth(-1);
+        }
+
+        void reset() {
+            nameLabel.setText("");
+            drmBadge.setVisible(false);
+            drmBadge.setManaged(false);
+            progressBadge.setVisible(false);
+            progressBadge.setManaged(false);
+            bookmarkIcon.setVisible(false);
+            bookmarkIcon.setManaged(false);
         }
     }
 
