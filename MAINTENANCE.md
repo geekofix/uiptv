@@ -78,11 +78,13 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    (user_info) ab und speichert Ablaufdatum (exp_date) + Status + Profil-JSON — damit steht auch für
    Xtream das Expiry Date im Panel.
 
-6. **Channel-Liste: Tooltip + horizontales Scrollen (Version 0.1.13, TEST):** In der Senderliste
-   (ganz rechts) zeigt ein Tooltip bei Maus-Berührung den vollständigen Sendernamen (max ~420px breit,
-   mit Umbruch); zusätzlich kann die Spalte bei langen Namen horizontal scrollen (UNCONSTRAINED-Resize-
-   Policy, Spaltenbreite automatisch nach Inhalt). Beides ist NEU und VOM NUTZER NOCH NICHT BEWERTET:
-   Er entscheidet, ob Tooltip, Scrollen oder beides bleibt — ggf. wieder entfernen bzw. nur eines behalten!
+6. **Channel-Liste: Tooltip + horizontales Scrollen (Version 0.1.13, VOM NUTZER BESTÄTIGT):** In der
+   Senderliste (ganz rechts) zeigt ein Tooltip bei Berührung den vollständigen Sendernamen (max ~420px
+   breit, mit Umbruch). Die Spalte bemisst sich an der längsten gemessenen Zeile + 20 % Scrollpuffer;
+   passt alles ins Fenster, füllt die Spalte die Breite aus (keine Trennlinie), sonst erscheint die
+   horizontale Scrollleiste. Wichtiger Fix auf dem Weg: die Zellen löschten ihren eigenen Zellen-Text
+   nicht (setText(null) fehlte) — eine zweite, überlagerte Textebene schnitt die Namen an fester Stelle
+   mit „…“ ab, deshalb halfen frühere Breiten-Änderungen nicht.
 
 7. **Kontextmenü „Pin“ in der Account-Liste (Version 0.1.13):** Rechtsklick auf markierte Accounts
    (Mehrfachauswahl möglich) → Menü „Pin“ → „Pin 1“ bis „Pin 5“ oder „Pin entfernen“: alle markierten
