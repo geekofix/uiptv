@@ -109,6 +109,7 @@ public class ReloadCachePopup extends VBox {
     private final Set<String> ignoredFailureDomains = new HashSet<>();
     private volatile boolean stopRequested = false;
     private volatile GlobalFailureDecision rememberedFailureDecision;
+    private volatile boolean reloadRunActive = false;
     private final Runnable onAccountsDeleted;
     private VBox accountColumn;
     private ColumnConstraints accountsColumn;
@@ -122,7 +123,17 @@ public class ReloadCachePopup extends VBox {
         showPopup(owner, preselectedAccounts, null);
     }
 
+    private static ReloadCachePopup activePopup;
+    private static Stage activeStage;
+
     public static void showPopup(Stage owner, List<Account> preselectedAccounts, Runnable onAccountsDeleted) {
+        ReloadCachePopup current = activePopup;
+        if (current != null && current.reloadRunActive && activeStage != null) {
+            activeStage.show();
+            activeStage.toFront();
+            activeStage.requestFocus();
+            return;
+        }
         Stage popupStage = new Stage();
         if (owner != null) {
             popupStage.initOwner(owner);
@@ -133,6 +144,8 @@ public class ReloadCachePopup extends VBox {
         I18n.applySceneOrientation(scene);
         popupStage.setTitle(I18n.tr("autoReloadAccountsCache"));
         popupStage.setScene(scene);
+        activePopup = popup;
+        activeStage = popupStage;
         popupStage.showAndWait();
     }
 
@@ -419,6 +432,15 @@ public class ReloadCachePopup extends VBox {
     }
 
     private void reloadSelectedAccounts() {
+        reloadRunActive = true;
+        try {
+            reloadSelectedAccountsInternal();
+        } finally {
+            reloadRunActive = false;
+        }
+    }
+
+    private void reloadSelectedAccountsInternal() {
         List<Account> selectedAccounts = checkBoxes.stream()
                 .filter(CheckBox::isSelected)
                 .map(checkBox -> (Account) checkBox.getUserData())

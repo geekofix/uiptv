@@ -55,6 +55,7 @@ public class ParseMultipleAccountUI extends VBox {
     private final CheckBox startVerificationAfterParsingCheckBox = new CheckBox(I18n.tr("autoStartVerificationAfterParsing"));
     private final ProminentButton saveButton = new ProminentButton(I18n.tr("parseAndSave"));
     private final Button clearButton = new Button(I18n.tr("autoClear"));
+    private final Button reloadStatusButton = new Button(I18n.tr("reloadShowStatus"));
     private final VBox contentContainer = new VBox();
     private Callback<Void> onSaveCallback;
 
@@ -102,6 +103,8 @@ public class ParseMultipleAccountUI extends VBox {
 
         HBox parseSaveRow = new HBox(5, saveButton);
         HBox clearRow = new HBox(5, clearButton);
+        HBox reloadStatusRow = new HBox(5, reloadStatusButton);
+        reloadStatusButton.setOnAction(event -> openReloadStatusPopup());
         contentContainer.getChildren().addAll(
                 multipleSPAccounts,
                 parseModeComboBox,
@@ -110,7 +113,8 @@ public class ParseMultipleAccountUI extends VBox {
                 convertM3uToXtremeCheckBox,
                 startVerificationAfterParsingCheckBox,
                 parseSaveRow,
-                clearRow
+                clearRow,
+                reloadStatusRow
         );
         addSubmitButtonClickHandler();
         addClearButtonClickHandler();
@@ -188,6 +192,13 @@ public class ParseMultipleAccountUI extends VBox {
                 showErrorAlert(I18n.tr("autoErrorParsingOrSavingAccounts"));
             }
         });
+    }
+
+    private void openReloadStatusPopup() {
+        Stage owner = getScene() != null && getScene().getWindow() instanceof Stage stage
+                ? stage
+                : null;
+        ReloadCachePopup.showPopup(owner, null, this::notifyAccountsChanged);
     }
 
     private void openVerificationPopup(List<Account> accountsToVerify) {
