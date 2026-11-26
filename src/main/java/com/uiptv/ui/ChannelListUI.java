@@ -606,7 +606,13 @@ public class ChannelListUI extends HBox {
 
     private static final double MAX_CHANNEL_COLUMN_WIDTH = 1600;
     private Label channelWidthProbe;
+    private Label drmBadgeProbe;
+    private Label progressBadgeProbe;
     private javafx.scene.Scene widthProbeScene;
+
+    private static final double CELL_HBOX_SPACING = 10;
+    private static final double RECT_BADGE_ALLOWANCE = 16;
+    private static final double THUMBNAIL_WIDTH = 48;
 
     private void updateChannelColumnWidth() {
         if (channelWidthProbe == null) {
@@ -623,6 +629,12 @@ public class ChannelListUI extends HBox {
         }
         double measured = channelName.getMinWidth();
         boolean thumbnailsEnabled = ThumbnailAwareUI.areThumbnailsEnabled();
+        ensureBadgeProbes();
+        drmBadgeProbe.setText(I18n.tr("autoDrm"));
+        progressBadgeProbe.setText(I18n.tr("autoInPROGRESS"));
+        double drmBadgeWidth = drmBadgeProbe.prefWidth(-1);
+        double progressBadgeWidth = progressBadgeProbe.prefWidth(-1);
+        boolean seriesAction = account.getAction() == Account.AccountAction.series;
         for (ChannelItem item : channelItems) {
             String itemText = item.getChannelName();
             if (itemText == null || itemText.isBlank()) {
@@ -630,12 +642,44 @@ public class ChannelListUI extends HBox {
             }
             channelWidthProbe.setText(itemText);
             double width = channelWidthProbe.prefWidth(-1);
+            int children = 2;
+            if (thumbnailsEnabled) {
+                width += THUMBNAIL_WIDTH;
+                children++;
+            }
+            com.uiptv.model.Channel channel = item.getChannel();
+            if (channel != null && PlayerService.getInstance().isDrmProtected(channel)) {
+                width += drmBadgeWidth;
+                children++;
+            }
+            if (seriesAction && channel != null && channel.isWatched()) {
+                width += progressBadgeWidth;
+                children++;
+            }
+            if (item.isBookmarked()) {
+                width += RECT_BADGE_ALLOWANCE;
+                children++;
+            }
+            width += CELL_HBOX_SPACING * (children - 1);
             if (width > measured) {
                 measured = width;
             }
         }
-        double padding = 20 + measured * 0.02 + (thumbnailsEnabled ? 64 : 0);
-        channelName.setPrefWidth(Math.min(measured + padding, MAX_CHANNEL_COLUMN_WIDTH));
+        channelName.setPrefWidth(Math.min(measured * 1.02 + 6, MAX_CHANNEL_COLUMN_WIDTH));
+    }
+
+    private void ensureBadgeProbes() {
+        if (drmBadgeProbe != null) {
+            return;
+        }
+        drmBadgeProbe = new Label();
+        drmBadgeProbe.getStyleClass().add(DRM_BADGE_STYLE_CLASS);
+        progressBadgeProbe = new Label();
+        progressBadgeProbe.getStyleClass().add(DRM_BADGE_STYLE_CLASS);
+        if (widthProbeScene != null && widthProbeScene.getRoot() instanceof javafx.scene.Group group) {
+            group.getChildren().addAll(drmBadgeProbe, progressBadgeProbe);
+            group.applyCss();
+        }
     }
 
     private void applyChannelColumnSizePolicy() {
