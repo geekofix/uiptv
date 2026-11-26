@@ -112,13 +112,12 @@ public class ProgressDialog extends Stage {
         statusScrollPane.getStyleClass().add("log-scroll-pane");
         statusScrollPane.setFitToWidth(true);
         statusPane.setVisible(false);
-        statusPane.setPrefWidth(300);
-        statusPane.setMinWidth(300);
+        statusPane.setMinWidth(250);
         VBox.setVgrow(statusScrollPane, Priority.ALWAYS);
         statusPane.getChildren().add(buildStatusPaneButtons());
 
         HBox logArea = new HBox(10, buildLogPane(), statusPane);
-        HBox.setHgrow(logArea.getChildren().get(0), Priority.ALWAYS);
+        logArea.getChildren().forEach(pane -> HBox.setHgrow(pane, Priority.ALWAYS));
 
         // Assemble Root
         root.setTop(progressBar);
