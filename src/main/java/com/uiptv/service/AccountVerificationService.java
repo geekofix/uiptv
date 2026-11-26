@@ -9,6 +9,7 @@ import com.uiptv.util.AccountType;
 import com.uiptv.util.FetchAPI;
 import com.uiptv.util.HttpUtil;
 import com.uiptv.util.StringUtils;
+import com.uiptv.util.UiptUtils;
 import com.uiptv.util.XtremeCredentialsJson;
 import org.json.JSONObject;
 
@@ -24,13 +25,18 @@ import java.util.Set;
 import static com.uiptv.model.Account.AccountAction.itv;
 
 public class AccountVerificationService {
-    private static final int VERIFY_TIMEOUT_SECONDS = 15;
+    private static final int VERIFY_TIMEOUT_SECONDS = 10;
     private static final HttpUtil.RequestOptions VERIFY_REQUEST_OPTIONS =
             new HttpUtil.RequestOptions(true, true, VERIFY_TIMEOUT_SECONDS, VERIFY_TIMEOUT_SECONDS, VERIFY_TIMEOUT_SECONDS);
+    private final List<String> failedServers = new ArrayList<>();
 
 
-    public record CredentialCheck(String label, boolean valid, boolean serverError, String errorMessage,
+    public record CredentialCheck(String label, boolean valid, boolean serverError, boolean skipped, String errorMessage,
                                    String expireDate, String accountStatus) {
+
+        public static CredentialCheck skipped(String label) {
+            return new CredentialCheck(label, false, false, true, null, "", "");
+        }
     }
 
     public boolean supports(Account account) {
@@ -63,7 +69,15 @@ public class AccountVerificationService {
         String status = info != null && info.getAccountStatus() != null ? info.getAccountStatus().toDisplay() : "unknown";
         List<CredentialCheck> checks = new ArrayList<>();
         for (String mac : stalkerMacs(account)) {
-            checks.add(verifyStalkerMac(account, mac, expireDate, status));
+            if (isServerKnownFailed(account)) {
+                checks.add(CredentialCheck.skipped(mac));
+                continue;
+            }
+            CredentialCheck check = verifyStalkerMac(account, mac, expireDate, status);
+            checks.add(check);
+            if (check.serverError()) {
+                markServerFailed(account);
+            }
         }
         return checks;
     }
@@ -74,13 +88,13 @@ public class AccountVerificationService {
             account.setMacAddress(mac);
             HandshakeService.getInstance().connect(account);
             if (account.isNotConnected()) {
-                return new CredentialCheck(mac, false, false, null, expireDate, status);
+                return new CredentialCheck(mac, false, false, false, null, expireDate, status);
             }
             String jsonCategories = FetchAPI.fetch(stalkerCategoryParams(account.getAction()), account, VERIFY_REQUEST_OPTIONS);
             boolean valid = !CategoryService.getInstance().parseCategories(jsonCategories, false).isEmpty();
-            return new CredentialCheck(mac, valid, false, null, expireDate, status);
+            return new CredentialCheck(mac, valid, false, false, null, expireDate, status);
         } catch (Exception e) {
-            return new CredentialCheck(mac, false, true, rootMessage(e), expireDate, status);
+            return new CredentialCheck(mac, false, true, false, rootMessage(e), expireDate, status);
         } finally {
             account.setMacAddress(originalMac);
         }
@@ -90,6 +104,10 @@ public class AccountVerificationService {
         List<CredentialCheck> checks = new ArrayList<>();
         for (XtremeCredentialsJson.Entry entry : xtremeCredentials(account)) {
             String label = entry.username() + ":" + entry.password();
+            if (isServerKnownFailed(account)) {
+                checks.add(CredentialCheck.skipped(label));
+                continue;
+            }
             String originalUsername = account.getUsername();
             String originalPassword = account.getPassword();
             try {
@@ -100,18 +118,33 @@ public class AccountVerificationService {
                 String expireDate = formatExpireDate(userInfo == null ? null : userInfo.optString("exp_date", ""));
                 String status = resolveXtreamStatus(userInfo);
                 returnXtremeCredentials(account, originalUsername, originalPassword);
-                checks.add(new CredentialCheck(label, valid, false, null, expireDate, status));
+                checks.add(new CredentialCheck(label, valid, false, false, null, expireDate, status));
             } catch (Exception e) {
                 returnXtremeCredentials(account, originalUsername, originalPassword);
                 String message = rootMessage(e);
                 if (message.contains("HTTP 401") || message.contains("HTTP 403")) {
-                    checks.add(new CredentialCheck(label, false, false, null, "Unknown", "unknown"));
+                    checks.add(new CredentialCheck(label, false, false, false, null, "Unknown", "unknown"));
                 } else {
-                    checks.add(new CredentialCheck(label, false, true, message, "Unknown", "unknown"));
+                    checks.add(new CredentialCheck(label, false, true, false, message, "Unknown", "unknown"));
+                    markServerFailed(account);
                 }
             }
         }
         return checks;
+    }
+
+    private boolean isServerKnownFailed(Account account) {
+        String url = account.getUrl();
+        if (StringUtils.isBlank(url)) {
+            return false;
+        }
+        return failedServers.stream().anyMatch(failed -> UiptUtils.isSameServerUrl(failed, url));
+    }
+
+    private void markServerFailed(Account account) {
+        if (!isServerKnownFailed(account)) {
+            failedServers.add(account.getUrl());
+        }
     }
 
     private String resolveXtreamStatus(JSONObject userInfo) {

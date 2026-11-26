@@ -730,6 +730,11 @@ public class AccountListUI extends HBox {
                             break;
                         }
                         AccountVerificationService.CredentialCheck check = checks.get(checkIndex);
+                        if (check.skipped()) {
+                            progressDialog.addErrorResult();
+                            progressDialog.addProgressText(I18n.tr("verifySkippedServerFailed", check.label()));
+                            continue;
+                        }
                         progressDialog.addProgressText(I18n.tr("manageVerifyingMacProgress", checkIndex + 1, checks.size(), check.label()));
                         if (check.serverError()) {
                             progressDialog.addErrorResult();
