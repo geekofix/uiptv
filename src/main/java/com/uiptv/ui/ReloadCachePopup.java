@@ -108,6 +108,7 @@ public class ReloadCachePopup extends VBox {
     private final ReloadRunOutcomeTracker runOutcomeTracker = new ReloadRunOutcomeTracker();
     private final Set<String> ignoredFailureDomains = new HashSet<>();
     private volatile boolean stopRequested = false;
+    private volatile GlobalFailureDecision rememberedFailureDecision;
     private final Runnable onAccountsDeleted;
     private VBox accountColumn;
     private ColumnConstraints accountsColumn;
@@ -452,6 +453,7 @@ public class ReloadCachePopup extends VBox {
 
     private void prepareReloadRun(List<Account> selectedAccounts) {
         stopRequested = false;
+        rememberedFailureDecision = null;
         Platform.runLater(() -> {
             reloadButton.setVisible(false);
             stopButton.setVisible(true);
@@ -1325,47 +1327,114 @@ public class ReloadCachePopup extends VBox {
     }
 
     private GlobalFailureDecision promptCarryOnAfterGlobalFailure(Account account, String reason, boolean canIgnoreDomain) {
-        final GlobalFailureDecision[] decision = {GlobalFailureDecision.CARRY_ON};
+        GlobalFailureDecision remembered = rememberedFailureDecision;
+        if (remembered != null) {
+            GlobalFailureDecision effective = remembered == GlobalFailureDecision.MARK_BAD_AND_IGNORE_DOMAIN && !canIgnoreDomain
+                    ? GlobalFailureDecision.MARK_BAD
+                    : remembered;
+            if (effective != GlobalFailureDecision.STOP_ALL) {
+                logMessage(account, I18n.tr("reloadAutoDecisionLog", decisionDisplay(effective)));
+            }
+            return effective;
+        }
+        final GlobalFailureDecision[] decision = {GlobalFailureDecision.STOP_ALL};
         runOnFxThreadAndWait(() -> {
-            ButtonType carryOnButton = new ButtonType(I18n.tr("reloadCarryOn"), ButtonBar.ButtonData.YES);
-            ButtonType stopAllButton = new ButtonType(I18n.tr("reloadStopAll"), ButtonBar.ButtonData.OTHER);
-            ButtonType markBadButton = new ButtonType(I18n.tr("reloadMarkBadAndNext"), ButtonBar.ButtonData.CANCEL_CLOSE);
-            ButtonType ignoreDomainButton = new ButtonType(I18n.tr("reloadMarkBadIgnoreDomain"), ButtonBar.ButtonData.NO);
             String promptMessage = canIgnoreDomain
                     ? I18n.tr("reloadGlobalFailurePromptWithIgnoreDomain", account.getAccountName(), reason)
                     : I18n.tr("reloadGlobalFailurePrompt", account.getAccountName(), reason);
-            List<ButtonType> buttons = new ArrayList<>();
-            buttons.add(carryOnButton);
-            if (canIgnoreDomain) {
-                buttons.add(ignoreDomainButton);
-            }
-            buttons.add(markBadButton);
-            buttons.add(stopAllButton);
 
-            Alert alert = new Alert(
-                    Alert.AlertType.CONFIRMATION,
-                    promptMessage,
-                    buttons.toArray(new ButtonType[0])
-            );
-            alert.setHeaderText(I18n.tr("reloadGlobalCallFailure"));
+            Dialog<GlobalFailureDecision> dialog = new Dialog<>();
+            dialog.initOwner(stage);
+            dialog.setTitle(I18n.tr("reloadGlobalCallFailure"));
+            dialog.setHeaderText(I18n.tr("reloadGlobalCallFailure"));
             if (RootApplication.getCurrentTheme() != null) {
-                alert.getDialogPane().getStylesheets().add(RootApplication.getCurrentTheme());
+                dialog.getDialogPane().getStylesheets().add(RootApplication.getCurrentTheme());
             }
-            alert.getDialogPane().setNodeOrientation(I18n.isCurrentLocaleRtl()
+            dialog.getDialogPane().setNodeOrientation(I18n.isCurrentLocaleRtl()
                     ? javafx.geometry.NodeOrientation.RIGHT_TO_LEFT
                     : javafx.geometry.NodeOrientation.LEFT_TO_RIGHT);
-            ButtonType selected = alert.showAndWait().orElse(markBadButton);
-            if (selected == carryOnButton) {
-                decision[0] = GlobalFailureDecision.CARRY_ON;
-            } else if (selected == ignoreDomainButton) {
-                decision[0] = GlobalFailureDecision.MARK_BAD_AND_IGNORE_DOMAIN;
-            } else if (selected == stopAllButton) {
-                decision[0] = GlobalFailureDecision.STOP_ALL;
-            } else {
-                decision[0] = GlobalFailureDecision.MARK_BAD;
+
+            Label messageLabel = new Label(promptMessage);
+            messageLabel.setWrapText(true);
+            messageLabel.setMaxWidth(Double.MAX_VALUE);
+
+            Button markBadButton = new Button(I18n.tr("reloadMarkBadAndNext"));
+            markBadButton.setMaxWidth(Double.MAX_VALUE);
+            markBadButton.setDefaultButton(true);
+            CheckBox rememberMarkBad = new CheckBox(I18n.tr("reloadApplyToRemaining"));
+            rememberMarkBad.setWrapText(true);
+            HBox markBadRow = new HBox(8, markBadButton, rememberMarkBad);
+            HBox.setHgrow(markBadButton, Priority.ALWAYS);
+
+            Button stopAllButton = new Button(I18n.tr("reloadStopAll"));
+            stopAllButton.setMaxWidth(Double.MAX_VALUE);
+            HBox stopAllRow = new HBox(stopAllButton);
+            HBox.setHgrow(stopAllButton, Priority.ALWAYS);
+
+            HBox ignoreDomainRow = null;
+            CheckBox rememberIgnoreDomain = null;
+            if (canIgnoreDomain) {
+                Button ignoreDomainButton = new Button(I18n.tr("reloadMarkBadIgnoreDomain"));
+                ignoreDomainButton.setMaxWidth(Double.MAX_VALUE);
+                rememberIgnoreDomain = new CheckBox(I18n.tr("reloadApplyToRemaining"));
+                rememberIgnoreDomain.setWrapText(true);
+                ignoreDomainRow = new HBox(8, ignoreDomainButton, rememberIgnoreDomain);
+                HBox.setHgrow(ignoreDomainButton, Priority.ALWAYS);
+                ignoreDomainButton.setOnAction(_ -> {
+                    decision[0] = GlobalFailureDecision.MARK_BAD_AND_IGNORE_DOMAIN;
+                    if (rememberIgnoreDomain.isSelected()) {
+                        rememberedFailureDecision = decision[0];
+                    }
+                    dialog.setResult(decision[0]);
+                });
             }
+
+            markBadButton.setOnAction(_ -> {
+                decision[0] = GlobalFailureDecision.MARK_BAD;
+                if (rememberMarkBad.isSelected()) {
+                    rememberedFailureDecision = decision[0];
+                }
+                dialog.setResult(decision[0]);
+            });
+            stopAllButton.setOnAction(_ -> {
+                decision[0] = GlobalFailureDecision.STOP_ALL;
+                dialog.setResult(decision[0]);
+            });
+
+            GridPane buttonGrid = new GridPane();
+            buttonGrid.setHgap(10);
+            buttonGrid.setVgap(10);
+            ColumnConstraints leftColumn = new ColumnConstraints();
+            ColumnConstraints rightColumn = new ColumnConstraints();
+            leftColumn.setPercentWidth(50);
+            rightColumn.setPercentWidth(50);
+            buttonGrid.getColumnConstraints().addAll(leftColumn, rightColumn);
+            buttonGrid.add(markBadRow, 0, 0);
+            buttonGrid.add(stopAllRow, 1, 0);
+            if (ignoreDomainRow != null) {
+                buttonGrid.add(ignoreDomainRow, 0, 1, 2, 1);
+            }
+
+            VBox content = new VBox(14, messageLabel, buttonGrid);
+            content.setPadding(new Insets(4));
+            dialog.getDialogPane().setContent(content);
+            dialog.getDialogPane().setMinWidth(520);
+            dialog.getDialogPane().setPrefWidth(560);
+            dialog.getDialogPane().setPrefHeight(javafx.scene.layout.Region.USE_COMPUTED_SIZE);
+
+            dialog.setResultConverter(_ -> decision[0]);
+            GlobalFailureDecision chosen = dialog.showAndWait().orElse(GlobalFailureDecision.STOP_ALL);
+            decision[0] = chosen;
         });
         return decision[0];
+    }
+
+    private String decisionDisplay(GlobalFailureDecision decision) {
+        return switch (decision) {
+            case MARK_BAD_AND_IGNORE_DOMAIN -> I18n.tr("reloadMarkBadIgnoreDomain");
+            case MARK_BAD -> I18n.tr("reloadMarkBadAndNext");
+            default -> I18n.tr("reloadStopAll");
+        };
     }
 
     private String resolveRepeatFailureDomain(Account account) {
