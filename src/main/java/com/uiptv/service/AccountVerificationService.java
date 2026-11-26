@@ -45,6 +45,9 @@ public class AccountVerificationService {
             return httpMatcher.group().toUpperCase(Locale.ROOT);
         }
         String normalized = message.toLowerCase(Locale.ROOT);
+        if (normalized.contains("[invalid]")) {
+            return "Result: Invalid";
+        }
         if (normalized.contains("timed out") || normalized.contains("timeout")) {
             return "Connect timed out";
         }

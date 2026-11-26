@@ -16,6 +16,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -293,6 +294,7 @@ public class ProgressDialog extends Stage {
     private StatusGroup createStatusGroup(String message) {
         StatusGroup group = new StatusGroup();
         group.headerCheckBox.setText(message);
+        group.headerCheckBox.setTooltip(new Tooltip(adviceForCategory(message)));
         group.headerCheckBox.setAllowIndeterminate(true);
         group.headerCheckBox.setOnAction(event -> {
             group.entries.forEach(checkBox -> checkBox.setSelected(group.headerCheckBox.isSelected()));
@@ -303,6 +305,17 @@ public class ProgressDialog extends Stage {
         VBox groupBox = new VBox(3, groupHeader, group.entryBox);
         statusContainer.getChildren().add(groupBox);
         return group;
+    }
+
+    private String adviceForCategory(String category) {
+        return switch (category) {
+            case "Result: Invalid" -> I18n.tr("verifyAdviceDelete");
+            case "HTTP 401" -> I18n.tr("verifyAdviceDelete");
+            case "HTTP 403" -> I18n.tr("verifyAdviceVpn");
+            case "Network unreachable" -> I18n.tr("verifyAdviceWait");
+            case "DNS resolution failed" -> I18n.tr("verifyAdviceDelete");
+            default -> I18n.tr("verifyAdviceRetry");
+        };
     }
 
     private void updateGroupHeaderState(StatusGroup group) {
