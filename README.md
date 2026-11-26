@@ -17,7 +17,12 @@
 > This project is not affiliated with or endorsed by the original author.
 > License stays MIT, see [LICENSE](LICENSE).
 
-UIPTV is a universal IPTV player written in Java for Windows, Linux, and macOS.
+UIPTV is a universal IPTV player written in Java. **This fork is a
+Linux-only project:** it is built, maintained, and tested on Linux only
+(Arch Linux / CachyOS). Upstream code contains Windows and macOS support,
+but this fork does not build, verify, or support those platforms — a clean
+Windows or macOS port would require maintainers who can actually test on
+them.
 It plays Live TV, VOD, and Series from Stalker portals, M3U playlists,
 Xtreme Codes, and RSS feeds — with an embedded player, external players, or
 a local-network web app.
@@ -38,9 +43,9 @@ Prebuilt packages are built automatically by GitHub Actions on every change
 - **Rename imported accounts to the current scheme** (e.g. after restoring an
   old database) with the terminal command `uiptv -names`. It shows live
   progress and exits without starting the app.
-- **Other systems:** build installers with Maven (see below) or use the
-  portable app bundle (jpackage app-image) that the standard upstream build
-  produces for Windows, Linux, and macOS.
+- **Other systems:** not provided by this fork. It is Linux-only — see the
+  note above. Use the upstream project if you need Windows or macOS builds
+  or try building from source at your own risk.
 - VLC is recommended for the best embedded playback experience.
 
 ## Building from source
