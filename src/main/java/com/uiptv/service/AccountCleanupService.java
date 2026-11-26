@@ -4,7 +4,7 @@ import com.uiptv.db.DatabaseMaintenance;
 import com.uiptv.model.Account;
 import com.uiptv.model.AccountInfo;
 import com.uiptv.ui.AccountInfoUiUtil;
-import com.uiptv.util.AccountResolver;
+
 import com.uiptv.util.AccountNameFormats;
 import com.uiptv.util.StringUtils;
 
