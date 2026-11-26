@@ -840,6 +840,10 @@ public class ManageAccountUI extends VBox {
         return pane;
     }
 
+    public void refreshDisplayedAccountInfo() {
+        refreshAccountInfoAsync(accountId);
+    }
+
     private void refreshAccountInfoAsync(String targetAccountId) {
         if (isBlank(targetAccountId)) {
             clearAccountInfoFields();

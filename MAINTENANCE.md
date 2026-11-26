@@ -85,9 +85,17 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    Er entscheidet, ob Tooltip, Scrollen oder beides bleibt — ggf. wieder entfernen bzw. nur eines behalten!
 
 7. **Kontextmenü „Pin“ in der Account-Liste (Version 0.1.13):** Rechtsklick auf markierte Accounts
-   (Mehrfachauswahl möglich) → Menü „Pin“ → „Pin 1“ bis „Pin 5“: alle markierten Accounts erhalten die
-   gewählte Pin-Stufe. Notwendig, weil bei Mehrfachauswahl im Account-Tab nur der zuerst angeklickte
-   Account im Formular erscheint.
+   (Mehrfachauswahl möglich) → Menü „Pin“ → „Pin 1“ bis „Pin 5“ oder „Pin entfernen“: alle markierten
+   Accounts erhalten die gewählte Pin-Stufe bzw. keinen Pin. Notwendig, weil bei Mehrfachauswahl im
+   Account-Tab nur der zuerst angeklickte Account im Formular erscheint.
+
+8. **Nachbesserungen (Version 0.1.13, Nutzer-Feedback-Runde 2):** a) Kontoinfos-Panel aktualisiert sich
+   nach jedem Cache-Reload automatisch (auch über das Kontextmenü in der Account-Liste), ohne den Account
+   wechseln zu müssen. b) Fehlende Zählwerte werden einmalig beim App-Start im Hintergrund nachgebaut
+   (`AccountInfoService.backfillMissingCountsAsync`), damit Bestands-Accounts sofort Zahlen zeigen;
+   danach aktualisieren sie nur noch der Reload. c) Senderliste: Spaltenbreite wird jetzt tatsächlich
+   am längsten Namen gemessen (CSS-Label-Messung); seitliches Scrollen funktioniert damit, die
+   abgeschnittenen Namen mit „…“, die Trennlinie und der Leerraum rechts sind damit weg. Tooltip bleibt.
 
 ## Aktuell offene Punkte / ToDos
 

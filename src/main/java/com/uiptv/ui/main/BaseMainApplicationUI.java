@@ -206,6 +206,7 @@ public abstract class BaseMainApplicationUI {
             if (!useEmbeddedAccountFlow()) {
                 context.manageAccountTab().setContent(manageAccountUI);
             }
+            com.uiptv.service.AccountInfoService.getInstance().backfillMissingCountsAsync();
         };
 
         Runnable loadConfiguration = () -> {

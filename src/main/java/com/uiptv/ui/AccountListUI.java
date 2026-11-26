@@ -550,6 +550,9 @@ public class AccountListUI extends HBox {
             pinItem.setOnAction(_ -> handleSetPinLevel(pinLevel));
             pinMenu.getItems().add(pinItem);
         }
+        MenuItem unpinItem = new MenuItem(I18n.tr("accountListUnpinMenu"));
+        unpinItem.setOnAction(_ -> handleSetPinLevel(0));
+        pinMenu.getItems().add(unpinItem);
 
         MenuItem reloadCache = new MenuItem(I18n.tr("autoReloadCache"));
         reloadCache.setOnAction(_ -> handleReloadCache(row.getItem()));
@@ -607,7 +610,12 @@ public class AccountListUI extends HBox {
             showErrorAlert(I18n.tr("autoNoCacheSupportedAccountSelected"));
             return;
         }
-        ReloadCachePopup.showPopup(resolveOwnerStage(), accounts, this::refresh);
+        ReloadCachePopup.showPopup(resolveOwnerStage(), accounts, () -> {
+            refresh();
+            if (manageAccountUI != null) {
+                manageAccountUI.refreshDisplayedAccountInfo();
+            }
+        });
     }
 
     private void runSingleSelectionAction(Runnable action) {

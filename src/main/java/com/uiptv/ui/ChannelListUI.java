@@ -145,6 +145,7 @@ public class ChannelListUI extends HBox {
             runLater(() -> {
                 if (!newItems.isEmpty()) {
                     channelItems.addAll(newItems);
+                    updateChannelColumnWidth();
                     table.setPlaceholder(null);
                 }
                 if (!logoUpdates.isEmpty()) {
@@ -348,7 +349,6 @@ public class ChannelListUI extends HBox {
 
         channelName.setSortType(TableColumn.SortType.ASCENDING);
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
-        channelName.setPrefWidth(javafx.scene.layout.Region.USE_COMPUTED_SIZE);
         channelName.setMinWidth(240);
 
         configureLoadingProgressBar();
@@ -600,6 +600,34 @@ public class ChannelListUI extends HBox {
 
     private void onThumbnailModeChanged(boolean enabled) {
         runLater(() -> applyThumbnailMode(enabled));
+    }
+
+    private static final double MAX_CHANNEL_COLUMN_WIDTH = 1600;
+    private Label channelWidthProbe;
+    private javafx.scene.Scene widthProbeScene;
+
+    private void updateChannelColumnWidth() {
+        if (channelWidthProbe == null) {
+            channelWidthProbe = new Label();
+            channelWidthProbe.getStyleClass().add("table-cell");
+            widthProbeScene = new javafx.scene.Scene(new javafx.scene.Group(channelWidthProbe));
+            channelWidthProbe.applyCss();
+        }
+        double measured = channelName.getMinWidth();
+        boolean thumbnailsEnabled = ThumbnailAwareUI.areThumbnailsEnabled();
+        for (ChannelItem item : channelItems) {
+            String itemText = item.getChannelName();
+            if (itemText == null || itemText.isBlank()) {
+                continue;
+            }
+            channelWidthProbe.setText(itemText);
+            double width = channelWidthProbe.prefWidth(-1);
+            if (width > measured) {
+                measured = width;
+            }
+        }
+        double padding = 48 + (thumbnailsEnabled ? 64 : 0);
+        channelName.setPrefWidth(Math.min(measured + padding, MAX_CHANNEL_COLUMN_WIDTH));
     }
 
     private void applyThumbnailMode(boolean enabled) {
