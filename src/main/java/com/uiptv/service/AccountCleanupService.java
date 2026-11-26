@@ -89,9 +89,14 @@ public class AccountCleanupService {
                 seenByDedupeKey.put(dedupeKey, account);
                 continue;
             }
-            AccountService.getInstance().delete(account.getDbId());
-            removed++;
-            listener.onLog(account.getAccountName() + " -> " + kept.getAccountName());
+            try {
+                AccountService.getInstance().delete(account.getDbId());
+                removed++;
+                listener.onLog(account.getAccountName() + " -> " + kept.getAccountName());
+            } catch (Exception e) {
+                String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+                listener.onLog(account.getAccountName() + " FAILED: " + reason);
+            }
         }
         return removed;
     }

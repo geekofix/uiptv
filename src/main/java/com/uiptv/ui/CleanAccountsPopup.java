@@ -134,16 +134,21 @@ public class CleanAccountsPopup extends VBox {
                 return stopRequested;
             }
         };
-        if (normalizeNames) {
-            appendLogOnFx(I18n.tr("cleanLogPhaseNormalize"));
-            AccountCleanupService.CleanupReport report = service.run(listener);
-            appendLogOnFx(report.stoppedEarly()
-                    ? I18n.tr("cleanLogStopped")
-                    : I18n.tr("cleanLogSummary", report.renamedAccounts(), report.removedDuplicates()));
-        } else {
-            appendLogOnFx(I18n.tr("clearDuplicatesLogPhase"));
-            int removedDuplicates = service.removeDuplicatesOnly(listener);
-            appendLogOnFx(I18n.tr("clearDuplicatesLogSummary", removedDuplicates));
+        try {
+            if (normalizeNames) {
+                appendLogOnFx(I18n.tr("cleanLogPhaseNormalize"));
+                AccountCleanupService.CleanupReport report = service.run(listener);
+                appendLogOnFx(report.stoppedEarly()
+                        ? I18n.tr("cleanLogStopped")
+                        : I18n.tr("cleanLogSummary", report.renamedAccounts(), report.removedDuplicates()));
+            } else {
+                appendLogOnFx(I18n.tr("clearDuplicatesLogPhase"));
+                int removedDuplicates = service.removeDuplicatesOnly(listener);
+                appendLogOnFx(I18n.tr("clearDuplicatesLogSummary", removedDuplicates));
+            }
+        } catch (Exception e) {
+            String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            appendLogOnFx(I18n.tr("reloadExportLogFailed", reason));
         }
         Platform.runLater(() -> {
             progressBar.setProgress(1.0);

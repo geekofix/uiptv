@@ -1243,6 +1243,7 @@ public class ManageAccountUI extends VBox {
                 @Override
                 protected Void call() throws Exception {
                     service.delete(accountId);
+                    com.uiptv.db.DatabaseMaintenance.requestVacuumAsync();
                     return null;
                 }
             };

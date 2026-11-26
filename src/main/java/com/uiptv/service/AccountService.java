@@ -51,6 +51,7 @@ public class AccountService {
         sessionTokenByAccountKey.clear();
         AccountDb.get().getAccounts().forEach(account -> deleteAccountData(account.getDbId(), account));
         touchChange();
+        DatabaseMaintenance.requestVacuumAsync();
     }
 
     public void refreshFromDatabase() {
@@ -176,7 +177,6 @@ public class AccountService {
         SeriesCategoryDb.get().deleteByAccount(accountId);
         AccountDb.get().delete(accountId);
         touchChange();
-        DatabaseMaintenance.requestVacuumAsync();
     }
 
     private void touchChange() {

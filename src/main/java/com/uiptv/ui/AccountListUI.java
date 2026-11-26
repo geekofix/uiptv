@@ -747,6 +747,7 @@ public class AccountListUI extends HBox {
                     onDeleteCallback.call(accountService.getById(selectedItem.getAccountId()));
                 }
             }
+            com.uiptv.db.DatabaseMaintenance.requestVacuumAsync();
             refresh();
         }
     }
