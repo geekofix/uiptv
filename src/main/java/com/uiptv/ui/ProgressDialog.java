@@ -260,12 +260,12 @@ public class ProgressDialog extends Stage {
         this.onDeleteSelectedAccounts = consumer;
     }
 
-    public void addProblemEntry(Account account, String label, String message) {
+    public void addProblemEntry(Account account, String label, String message, String groupKey) {
         Platform.runLater(() -> {
             statusPane.setVisible(true);
             boolean pinnedToBottom = isPinnedToBottom(statusScrollPane);
             statusLines.add(account.getAccountName() + " — " + label + " — " + message);
-            StatusGroup group = statusGroups.computeIfAbsent(message, this::createStatusGroup);
+            StatusGroup group = statusGroups.computeIfAbsent(groupKey, this::createStatusGroup);
             javafx.scene.control.CheckBox checkBox = new javafx.scene.control.CheckBox();
             statusAccounts.put(checkBox, account);
             statusCheckBoxes.add(checkBox);

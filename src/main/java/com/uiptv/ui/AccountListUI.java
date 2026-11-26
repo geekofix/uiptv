@@ -739,14 +739,16 @@ public class AccountListUI extends HBox {
                         if (check.serverError()) {
                             progressDialog.addErrorResult();
                             progressDialog.addProgressText(I18n.tr("verifyResultError", check.errorMessage()));
-                            progressDialog.addProblemEntry(account, check.label(), check.errorMessage());
+                            progressDialog.addProblemEntry(account, check.label(), check.errorMessage(),
+                                    AccountVerificationService.errorCategory(check.errorMessage()));
                         } else if (check.valid()) {
                             progressDialog.addResult(true);
                             progressDialog.addProgressText(I18n.tr("manageResultValid"));
                         } else {
                             progressDialog.addResult(false);
                             progressDialog.addProgressText(I18n.tr("manageResultInvalid"));
-                            progressDialog.addProblemEntry(account, check.label(), I18n.tr("manageResultInvalid"));
+                            progressDialog.addProblemEntry(account, check.label(), I18n.tr("manageResultInvalid"),
+                                    AccountVerificationService.errorCategory(I18n.tr("manageResultInvalid")));
                         }
                         progressDialog.addProgressText(I18n.tr("manageAccountInfoExpireDate") + ": " + check.expireDate());
                         progressDialog.addProgressText(I18n.tr("manageAccountInfoStatus") + ": " + check.accountStatus());

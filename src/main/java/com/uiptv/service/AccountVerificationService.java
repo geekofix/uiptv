@@ -15,6 +15,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -30,6 +33,39 @@ public class AccountVerificationService {
             new HttpUtil.RequestOptions(true, true, VERIFY_TIMEOUT_SECONDS, VERIFY_TIMEOUT_SECONDS, VERIFY_TIMEOUT_SECONDS);
     private final List<String> failedServers = new ArrayList<>();
 
+
+    private static final Pattern HTTP_STATUS_PATTERN = Pattern.compile("(?i)HTTP \\d{3}");
+
+    public static String errorCategory(String message) {
+        if (message == null || message.isBlank()) {
+            return "Unknown error";
+        }
+        Matcher httpMatcher = HTTP_STATUS_PATTERN.matcher(message);
+        if (httpMatcher.find()) {
+            return httpMatcher.group().toUpperCase(Locale.ROOT);
+        }
+        String normalized = message.toLowerCase(Locale.ROOT);
+        if (normalized.contains("timed out") || normalized.contains("timeout")) {
+            return "Connect timed out";
+        }
+        if (normalized.contains("refused") || normalized.contains("abgelehnt")) {
+            return "Connection refused";
+        }
+        if (normalized.contains("unreachable") || normalized.contains("nicht erreichbar")) {
+            return "Network unreachable";
+        }
+        if (normalized.contains("unknownhost") || normalized.contains("keine adresse")
+                || normalized.contains("name oder der dienst")) {
+            return "DNS resolution failed";
+        }
+        if (normalized.contains("reset")) {
+            return "Connection reset";
+        }
+        if (normalized.contains("json")) {
+            return "Invalid server response (JSON)";
+        }
+        return message;
+    }
 
     public record CredentialCheck(String label, boolean valid, boolean serverError, boolean skipped, String errorMessage,
                                    String expireDate, String accountStatus) {
