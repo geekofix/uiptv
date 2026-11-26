@@ -113,10 +113,10 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    Nachfragen. „Stop all“ ohne Checkbox. Schließen mit X/Esc = Stop all. „Mark Bad & Next“ ist der
    Standard-Button (Enter).
    ZUSÄTZLICH: Wird das Reload-Fenster per X geschlossen, läuft der Durchlauf im Hintergrund weiter; die
-   Popup-Instanz samt Zustand bleibt erhalten. Jeder erneute Aufruf (Kontextmenü „Reload Cache“, Button im
-   Account-Tab oder der neue Button „Reload-Status anzeigen“ im Tab „Import Bulk Accounts“) öffnet bei
-   laufendem Durchlauf dasselbe Fenster mit vollem Live-Stand (statt eines leeren Popups); läuft nichts,
-   öffnet sich ein normales neues Popup.
+   Popup-Instanz samt Zustand bleibt erhalten. Der Button „Reload-Status anzeigen“ im Tab „Import Bulk Accounts“
+   öffnet IMMER das letzte Reload-Fenster samt vollem Zustand (auch wenn der Durchlauf schon beendet ist);
+   existiert noch keins, öffnet er ein normales neues Popup. Kontextmenü „Reload Cache“ und der Button im
+   Account-Tab öffnen bei laufendem Durchlauf dasselbe Fenster, sonst ein neues mit aktueller Auswahl.
 
 10. **Cache-/DB-Hygiene (Version 0.1.13):** a) Kontextmenü der Account-Liste: neuer Eintrag „Delete Cache“,
    wirkt auf alle markierten Accounts (mit Bestätigungsdialog und Hintergrund-Ausführung). b) BUGFIX Account-Löschung:
