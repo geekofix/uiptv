@@ -1371,24 +1371,6 @@ public class ReloadCachePopup extends VBox {
             HBox stopAllRow = new HBox(stopAllButton);
             HBox.setHgrow(stopAllButton, Priority.ALWAYS);
 
-            HBox ignoreDomainRow = null;
-            CheckBox rememberIgnoreDomain = null;
-            if (canIgnoreDomain) {
-                Button ignoreDomainButton = new Button(I18n.tr("reloadMarkBadIgnoreDomain"));
-                ignoreDomainButton.setMaxWidth(Double.MAX_VALUE);
-                rememberIgnoreDomain = new CheckBox(I18n.tr("reloadApplyToRemaining"));
-                rememberIgnoreDomain.setWrapText(true);
-                ignoreDomainRow = new HBox(8, ignoreDomainButton, rememberIgnoreDomain);
-                HBox.setHgrow(ignoreDomainButton, Priority.ALWAYS);
-                ignoreDomainButton.setOnAction(_ -> {
-                    decision[0] = GlobalFailureDecision.MARK_BAD_AND_IGNORE_DOMAIN;
-                    if (rememberIgnoreDomain.isSelected()) {
-                        rememberedFailureDecision = decision[0];
-                    }
-                    dialog.setResult(decision[0]);
-                });
-            }
-
             markBadButton.setOnAction(_ -> {
                 decision[0] = GlobalFailureDecision.MARK_BAD;
                 if (rememberMarkBad.isSelected()) {
@@ -1411,7 +1393,20 @@ public class ReloadCachePopup extends VBox {
             buttonGrid.getColumnConstraints().addAll(leftColumn, rightColumn);
             buttonGrid.add(markBadRow, 0, 0);
             buttonGrid.add(stopAllRow, 1, 0);
-            if (ignoreDomainRow != null) {
+            if (canIgnoreDomain) {
+                final Button ignoreDomainButton = new Button(I18n.tr("reloadMarkBadIgnoreDomain"));
+                ignoreDomainButton.setMaxWidth(Double.MAX_VALUE);
+                final CheckBox rememberIgnoreDomain = new CheckBox(I18n.tr("reloadApplyToRemaining"));
+                rememberIgnoreDomain.setWrapText(true);
+                final HBox ignoreDomainRow = new HBox(8, ignoreDomainButton, rememberIgnoreDomain);
+                HBox.setHgrow(ignoreDomainButton, Priority.ALWAYS);
+                ignoreDomainButton.setOnAction(_ -> {
+                    decision[0] = GlobalFailureDecision.MARK_BAD_AND_IGNORE_DOMAIN;
+                    if (rememberIgnoreDomain.isSelected()) {
+                        rememberedFailureDecision = decision[0];
+                    }
+                    dialog.setResult(decision[0]);
+                });
                 buttonGrid.add(ignoreDomainRow, 0, 1, 2, 1);
             }
 
