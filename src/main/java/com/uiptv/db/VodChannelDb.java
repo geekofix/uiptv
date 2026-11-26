@@ -151,6 +151,21 @@ public class VodChannelDb extends BaseDb {
         c.setExtraJson(nullSafeString(resultSet, "extraJson"));
         return c;
     }
+    public java.util.Map<String, Integer> getChannelCountByAccount() {
+        String sql = "SELECT accountId, COUNT(*) FROM " + validatedTableName(VOD_CHANNEL_TABLE) + " WHERE accountId IS NOT NULL GROUP BY accountId";
+        java.util.Map<String, Integer> counts = new java.util.LinkedHashMap<>();
+        try (Connection conn = connect(); PreparedStatement statement = conn.prepareStatement(sql)) {
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    counts.put(rs.getString(1), rs.getInt(2));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DatabaseAccessException("Unable to execute vod channel count by account query", e);
+        }
+        return counts;
+    }
+
     public int getChannelCountForAccount(String accountId) {
         String sql = "SELECT COUNT(*) FROM " + validatedTableName(VOD_CHANNEL_TABLE) + " WHERE accountId=?";
         try (Connection conn = connect(); PreparedStatement statement = conn.prepareStatement(sql)) {

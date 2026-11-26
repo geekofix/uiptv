@@ -8,10 +8,16 @@ import com.uiptv.db.SeriesChannelDb;
 import com.uiptv.db.VodChannelDb;
 import com.uiptv.model.AccountInfo;
 
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.Set;
+
 import static com.uiptv.util.StringUtils.isBlank;
 
 @SuppressWarnings("java:S6548")
 public class AccountInfoService {
+    private final Set<Runnable> changeListeners = new CopyOnWriteArraySet<>();
+
     private AccountInfoService() {
     }
 
@@ -32,6 +38,15 @@ public class AccountInfoService {
 
     public void save(AccountInfo info) {
         AccountInfoDb.get().save(info);
+        changeListeners.forEach(Runnable::run);
+    }
+
+    public void addChangeListener(Runnable listener) {
+        changeListeners.add(listener);
+    }
+
+    public void removeChangeListener(Runnable listener) {
+        changeListeners.remove(listener);
     }
 
     public void deleteByAccountId(String accountId) {
@@ -41,6 +56,10 @@ public class AccountInfoService {
     public void backfillMissingCountsAsync() {
         Thread thread = new Thread(() -> {
             try {
+                Map<String, Integer> liveCounts = ChannelDb.get().getChannelCountByAccount();
+                Map<String, Integer> vodCounts = VodChannelDb.get().getChannelCountByAccount();
+                Map<String, Integer> seriesCounts = SeriesChannelDb.get().getChannelCountByAccount();
+                Map<String, Integer> categoryCounts = CategoryDb.get().getCountByAccount();
                 for (Account account : AccountService.getInstance().getAll().values()) {
                     String accountId = account == null ? null : account.getDbId();
                     if (isBlank(accountId)) {
@@ -54,10 +73,10 @@ public class AccountInfoService {
                         info = new AccountInfo();
                         info.setAccountId(accountId);
                     }
-                    info.setLiveCount(ChannelDb.get().getChannelCountForAccount(accountId));
-                    info.setVodCount(VodChannelDb.get().getChannelCountForAccount(accountId));
-                    info.setSeriesCount(SeriesChannelDb.get().getChannelCountForAccount(accountId));
-                    info.setCategoriesCount(CategoryDb.get().getCategoryCountForAccount(accountId));
+                    info.setLiveCount(liveCounts.getOrDefault(accountId, 0));
+                    info.setVodCount(vodCounts.getOrDefault(accountId, 0));
+                    info.setSeriesCount(seriesCounts.getOrDefault(accountId, 0));
+                    info.setCategoriesCount(categoryCounts.getOrDefault(accountId, 0));
                     save(info);
                 }
             } catch (Exception _) {

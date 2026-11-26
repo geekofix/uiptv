@@ -348,8 +348,10 @@ public class ChannelListUI extends HBox {
         applyThumbnailMode(ThumbnailAwareUI.areThumbnailsEnabled());
 
         channelName.setSortType(TableColumn.SortType.ASCENDING);
-        table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         channelName.setMinWidth(240);
+        channelName.prefWidthProperty().addListener((_, _, _) -> applyChannelColumnSizePolicy());
+        table.widthProperty().addListener((_, _, _) -> applyChannelColumnSizePolicy());
 
         configureLoadingProgressBar();
         VBox searchBox = new VBox(5, loadingProgressBox, table.getSearchTextField());
@@ -626,8 +628,22 @@ public class ChannelListUI extends HBox {
                 measured = width;
             }
         }
-        double padding = 48 + (thumbnailsEnabled ? 64 : 0);
+        double padding = 20 + (thumbnailsEnabled ? 64 : 0);
         channelName.setPrefWidth(Math.min(measured + padding, MAX_CHANNEL_COLUMN_WIDTH));
+    }
+
+    private void applyChannelColumnSizePolicy() {
+        double pref = channelName.getPrefWidth();
+        double viewportWidth = table.getWidth();
+        if (pref <= 0 || viewportWidth <= 0) {
+            return;
+        }
+        boolean namesFit = pref <= viewportWidth;
+        if (namesFit) {
+            table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        } else {
+            table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        }
     }
 
     private void applyThumbnailMode(boolean enabled) {

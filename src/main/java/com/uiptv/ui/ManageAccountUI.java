@@ -163,7 +163,12 @@ public class ManageAccountUI extends VBox {
     private String xtremeDefaultUsername;
 
     public ManageAccountUI() {
+        accountInfoService.addChangeListener(this::onAccountInfoSaved);
         initWidgets();
+    }
+
+    private void onAccountInfoSaved() {
+        Platform.runLater(this::refreshDisplayedAccountInfo);
     }
 
     public void addCallbackHandler(Callback<Object> onSaveCallback) {

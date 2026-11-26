@@ -76,6 +76,23 @@ public class ChannelDb extends BaseDb {
         return getAll(" WHERE categoryId=?", new String[]{dbId});
     }
 
+    public Map<String, Integer> getChannelCountByAccount() {
+        String sql = "SELECT cat.accountId, COUNT(*) FROM " + validatedTableName(CHANNEL_TABLE)
+                + " ch JOIN " + validatedTableName(CATEGORY_TABLE) + " cat ON ch.categoryId = cat.id"
+                + " GROUP BY cat.accountId";
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        try (Connection conn = connect(); PreparedStatement statement = conn.prepareStatement(sql)) {
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    counts.put(rs.getString(1), rs.getInt(2));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DatabaseAccessException("Unable to execute channel count by account query", e);
+        }
+        return counts;
+    }
+
     public int getChannelCountForAccount(String accountId) {
         String sql = "SELECT COUNT(*) FROM " + validatedTableName(CHANNEL_TABLE) +
                 " WHERE categoryId IN (" +

@@ -89,13 +89,13 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    Accounts erhalten die gewählte Pin-Stufe bzw. keinen Pin. Notwendig, weil bei Mehrfachauswahl im
    Account-Tab nur der zuerst angeklickte Account im Formular erscheint.
 
-8. **Nachbesserungen (Version 0.1.13, Nutzer-Feedback-Runde 2):** a) Kontoinfos-Panel aktualisiert sich
-   nach jedem Cache-Reload automatisch (auch über das Kontextmenü in der Account-Liste), ohne den Account
-   wechseln zu müssen. b) Fehlende Zählwerte werden einmalig beim App-Start im Hintergrund nachgebaut
-   (`AccountInfoService.backfillMissingCountsAsync`), damit Bestands-Accounts sofort Zahlen zeigen;
-   danach aktualisieren sie nur noch der Reload. c) Senderliste: Spaltenbreite wird jetzt tatsächlich
-   am längsten Namen gemessen (CSS-Label-Messung); seitliches Scrollen funktioniert damit, die
-   abgeschnittenen Namen mit „…“, die Trennlinie und der Leerraum rechts sind damit weg. Tooltip bleibt.
+8. **Nachbesserungen (Version 0.1.13, Nutzer-Feedback-Runde 2+3):** a) Kontoinfos-Panel aktualisiert sich
+   NUN WIRKLICH automatisch: `AccountInfoService.save` benachrichtigt Listener, `ManageAccountUI` horcht
+   darauf (Grund für den vorherigen Fehlschlag: der Reload-Popup-Callback lief nur beim Löschen von Accounts).
+   b) Backfill der Zählwerte nutzt jetzt 4 gruppierte Sammel-Abfragen (je eine für ALLE Accounts) statt 4
+   Abfragen pro Account — auch auf einer 7-GB-DB in Sekunden statt Minuten. c) Senderliste: passt die Spalte
+   an die Viewport-Breite an, solange der längste Name hineinpasst (keine Trennlinie/leerer Bereich mehr);
+   erst wenn der längste Name breiter ist, wird die Spalte namenslang und die horizontale Scrollleiste kommt.
 
 ## Aktuell offene Punkte / ToDos
 

@@ -24,6 +24,21 @@ public class CategoryDb extends BaseDb {
         return instance;
     }
 
+    public java.util.Map<String, Integer> getCountByAccount() {
+        String sql = "SELECT accountId, COUNT(*) FROM " + CATEGORY_TABLE.getTableName() + " WHERE accountId IS NOT NULL GROUP BY accountId";
+        java.util.Map<String, Integer> counts = new java.util.LinkedHashMap<>();
+        try (Connection conn = connect(); PreparedStatement statement = conn.prepareStatement(sql)) {
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    counts.put(rs.getString(1), rs.getInt(2));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DatabaseAccessException("Unable to execute category count by account query", e);
+        }
+        return counts;
+    }
+
     public int getCategoryCountForAccount(String accountId) {
         String sql = "SELECT COUNT(*) FROM " + CATEGORY_TABLE.getTableName() + " WHERE accountId=?";
         try (Connection conn = connect(); PreparedStatement statement = conn.prepareStatement(sql)) {
