@@ -28,10 +28,15 @@ public class StalkerPortalParser implements AccountParser {
 
     private final Function<String, Account> accountProvider;
     private final Consumer<Account> accountSaver;
+    private String accountNameSuffix = "";
     private Consumer<String> duplicateSink = _ -> {
     };
 
     @Override
+    public void setAccountNameSuffix(String suffix) {
+        this.accountNameSuffix = suffix == null ? "" : suffix;
+    }
+
     public void setDuplicateSink(Consumer<String> sink) {
         this.duplicateSink = sink != null ? sink : _ -> {
         };
@@ -205,7 +210,7 @@ public class StalkerPortalParser implements AccountParser {
 
     private void saveGroupedAccount(Account currentAccount, Map<String, Account> groupedAccounts,
                                     List<Account> createdAccounts, Set<String> processedNames) {
-        String name = getNameFromUrl(currentAccount.getUrl().replace("_", ""));
+        String name = getNameFromUrl(currentAccount.getUrl().replace("_", "")) + accountNameSuffix;
         currentAccount.setAccountName(name);
         Account existing = groupedAccounts.get(name);
         if (existing != null) {
@@ -284,10 +289,10 @@ public class StalkerPortalParser implements AccountParser {
     private String nextUniqueAccountName(String url, Set<String> processedNames) {
         String baseName = getNameFromUrl(url);
         int counter = 1;
-        String uniqueName = baseName + " (" + String.format("%04d", counter) + ")";
+        String uniqueName = baseName + " (" + String.format("%04d", counter) + ")" + accountNameSuffix;
         while (accountProvider.apply(uniqueName) != null || processedNames.contains(uniqueName)) {
             counter++;
-            uniqueName = baseName + " (" + String.format("%04d", counter) + ")";
+            uniqueName = baseName + " (" + String.format("%04d", counter) + ")" + accountNameSuffix;
         }
         return uniqueName;
     }

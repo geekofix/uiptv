@@ -54,13 +54,17 @@ public class UiptUtils {
     }
 
     public static String getUniqueNameFromUrl(String urlString) {
+        return getUniqueNameFromUrl(urlString, "");
+    }
+
+    public static String getUniqueNameFromUrl(String urlString, String suffix) {
         try {
             URL url = new URL(urlString);
             URI uri = url.toURI();
             int i = 1;
             String validName;
             do {
-                validName = uri.getHost() + " (" + String.format("%04d", i++) + ")";
+                validName = uri.getHost() + " (" + String.format("%04d", i++) + ")" + (suffix == null ? "" : suffix);
             } while (AccountService.getInstance().getByName(validName) != null);
             return validName;
         } catch (Exception _) {

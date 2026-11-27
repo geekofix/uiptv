@@ -15,6 +15,12 @@ import static com.uiptv.util.StringUtils.isNotBlank;
 public class M3uParser implements AccountParser {
     private java.util.function.Consumer<String> duplicateSink = _ -> {
     };
+    private String accountNameSuffix = "";
+
+    @Override
+    public void setAccountNameSuffix(String suffix) {
+        this.accountNameSuffix = suffix == null ? "" : suffix;
+    }
 
     @Override
     public void setDuplicateSink(java.util.function.Consumer<String> sink) {
@@ -48,7 +54,7 @@ public class M3uParser implements AccountParser {
                     duplicateSink.accept(duplicate.getAccountName());
                     continue;
                 }
-                String uniqueName = getUniqueNameFromUrl(m3uPlayLIstUrl);
+                String uniqueName = getUniqueNameFromUrl(m3uPlayLIstUrl, accountNameSuffix);
                 Account account = new Account(uniqueName, username, password, m3uPlayLIstUrl, null, null, null, null, null, null,
                         accountType, null, m3uPlayLIstUrl, false);
                 if (accountType == AccountType.XTREME_API && isNotBlank(username) && isNotBlank(password)) {

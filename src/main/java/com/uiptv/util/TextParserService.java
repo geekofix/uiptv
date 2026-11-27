@@ -21,6 +21,10 @@ public class TextParserService {
     }
 
     public static List<Account> saveBulkAccounts(String text, String mode, boolean groupAccountsByMac, boolean convertM3uToXtreme, java.util.function.Consumer<String> duplicateSink) {
+        return saveBulkAccounts(text, mode, groupAccountsByMac, convertM3uToXtreme, duplicateSink, "");
+    }
+
+    public static List<Account> saveBulkAccounts(String text, String mode, boolean groupAccountsByMac, boolean convertM3uToXtreme, java.util.function.Consumer<String> duplicateSink, String accountNameSuffix) {
         AccountParser parser;
 
         if (MODE_STALKER.equals(mode)) {
@@ -34,6 +38,7 @@ public class TextParserService {
         if (duplicateSink != null) {
             parser.setDuplicateSink(duplicateSink);
         }
+        parser.setAccountNameSuffix(accountNameSuffix);
         return parser.parseAndSave(text, groupAccountsByMac, convertM3uToXtreme);
     }
 }

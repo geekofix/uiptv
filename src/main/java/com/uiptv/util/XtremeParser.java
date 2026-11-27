@@ -30,8 +30,14 @@ public class XtremeParser implements AccountParser {
 
     private final Function<String, Account> accountProvider;
     private final Consumer<Account> accountSaver;
+    private String accountNameSuffix = "";
     private Consumer<String> duplicateSink = _ -> {
     };
+
+    @Override
+    public void setAccountNameSuffix(String suffix) {
+        this.accountNameSuffix = suffix == null ? "" : suffix;
+    }
 
     @Override
     public void setDuplicateSink(Consumer<String> sink) {
@@ -162,7 +168,7 @@ public class XtremeParser implements AccountParser {
         Map<String, Account> groupedAccounts = new LinkedHashMap<>();
         List<Account> createdAccounts = new ArrayList<>();
         for (ParsedAccount parsed : parsedAccounts) {
-            String name = accountNameFromUrl(parsed.url());
+            String name = accountNameFromUrl(parsed.url()) + accountNameSuffix;
             Account existing = groupedAccounts.get(name);
             if (existing != null) {
                 mergeCredentials(existing, parsed.credentials());
@@ -211,10 +217,10 @@ public class XtremeParser implements AccountParser {
     private String nextUniqueAccountName(String url, Set<String> processedNames) {
         String baseName = accountNameFromUrl(url);
         int counter = 1;
-        String candidate = baseName + " (" + String.format("%04d", counter) + ")";
+        String candidate = baseName + " (" + String.format("%04d", counter) + ")" + accountNameSuffix;
         while (accountProvider.apply(candidate) != null || processedNames.contains(candidate)) {
             counter++;
-            candidate = baseName + " (" + String.format("%04d", counter) + ")";
+            candidate = baseName + " (" + String.format("%04d", counter) + ")" + accountNameSuffix;
         }
         return candidate;
     }

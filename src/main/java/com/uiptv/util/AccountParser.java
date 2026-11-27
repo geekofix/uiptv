@@ -12,6 +12,9 @@ public interface AccountParser {
     default void setDuplicateSink(java.util.function.Consumer<String> sink) {
     }
 
+    default void setAccountNameSuffix(String suffix) {
+    }
+
     /**
      * Parses the given text and saves the discovered accounts.
      *

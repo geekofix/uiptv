@@ -53,6 +53,8 @@ public class ParseMultipleAccountUI extends VBox {
     private final CheckBox groupAccountsCheckBox = new CheckBox(I18n.tr(GROUP_BY_MAC_LABEL));
     private final CheckBox convertM3uToXtremeCheckBox = new CheckBox(I18n.tr("autoWherePossibleConvertM3UToXtreme"));
     private final CheckBox startVerificationAfterParsingCheckBox = new CheckBox(I18n.tr("autoStartVerificationAfterParsing"));
+    private final CheckBox vpnTagCheckBox = new CheckBox(I18n.tr("importVpnTag"));
+    private final javafx.scene.control.TextField vpnTagCodeField = new javafx.scene.control.TextField();
     private final ProminentButton saveButton = new ProminentButton(I18n.tr("parseAndSave"));
     private final Button clearButton = new Button(I18n.tr("autoClear"));
     private final Button reloadStatusButton = new Button(I18n.tr("reloadShowStatus"));
@@ -101,6 +103,13 @@ public class ParseMultipleAccountUI extends VBox {
         Region spacer = new Region();
         spacer.setPrefHeight(10);
 
+        vpnTagCodeField.setPromptText(I18n.tr("importVpnTagCodePrompt"));
+        vpnTagCodeField.setPrefColumnCount(3);
+        vpnTagCodeField.setTextFormatter(new javafx.scene.control.TextFormatter<String>(change ->
+                change.getControlNewText().length() <= 3 ? change : null));
+        vpnTagCodeField.disableProperty().bind(vpnTagCheckBox.selectedProperty().not());
+        HBox vpnTagRow = new HBox(5, vpnTagCheckBox, vpnTagCodeField);
+
         HBox parseSaveRow = new HBox(5, saveButton);
         HBox clearRow = new HBox(5, clearButton);
         HBox reloadStatusRow = new HBox(5, reloadStatusButton);
@@ -112,6 +121,7 @@ public class ParseMultipleAccountUI extends VBox {
                 groupAccountsCheckBox,
                 convertM3uToXtremeCheckBox,
                 startVerificationAfterParsingCheckBox,
+                vpnTagRow,
                 parseSaveRow,
                 clearRow,
                 reloadStatusRow
@@ -158,6 +168,14 @@ public class ParseMultipleAccountUI extends VBox {
         convertM3uToXtremeCheckBox.setVisible(TextParserService.MODE_M3U.equals(mode));
     }
 
+    private String resolveVpnNameSuffix() {
+        if (!vpnTagCheckBox.isSelected()) {
+            return "";
+        }
+        String code = vpnTagCodeField.getText() == null ? "" : vpnTagCodeField.getText().trim();
+        return code.isEmpty() ? " (VPN)" : " (VPN: " + code + ")";
+    }
+
     private void addClearButtonClickHandler() {
         clearButton.setOnAction(event -> clearAll());
     }
@@ -168,6 +186,8 @@ public class ParseMultipleAccountUI extends VBox {
         groupAccountsCheckBox.setSelected(false);
         convertM3uToXtremeCheckBox.setSelected(true);
         startVerificationAfterParsingCheckBox.setSelected(true);
+        vpnTagCheckBox.setSelected(false);
+        vpnTagCodeField.clear();
     }
 
     private void addSubmitButtonClickHandler() {
@@ -180,7 +200,7 @@ public class ParseMultipleAccountUI extends VBox {
                 String selectedMode = parseModeComboBox.getValue();
                 boolean startVerificationAfterParsing = startVerificationAfterParsingCheckBox.isSelected();
                 List<String> skippedDuplicates = new java.util.ArrayList<>();
-                List<Account> createdAccounts = TextParserService.saveBulkAccounts(multipleSPAccounts.getText(), selectedMode, groupAccountsCheckBox.isSelected(), convertM3uToXtremeCheckBox.isSelected(), skippedDuplicates::add);
+                List<Account> createdAccounts = TextParserService.saveBulkAccounts(multipleSPAccounts.getText(), selectedMode, groupAccountsCheckBox.isSelected(), convertM3uToXtremeCheckBox.isSelected(), skippedDuplicates::add, resolveVpnNameSuffix());
                 clearAll();
                 if (onSaveCallback != null) {
                     onSaveCallback.call(null);
