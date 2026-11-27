@@ -230,9 +230,23 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
    der frühere automatische Lösch-Dialog am Ende wurde durch die Checkbox-Auswahl ersetzt — kein Ausschluss
    mehr bei gemischten Fehlern, Entscheidung liegt beim Nutzer). Dialog: 900×620, NICHT-modal (App bleibt
    während langsamer Server-Tests nutzbar), Copy/Export-Buttons pro Bereich (Dateinamen uiptv_verify_log_*
-   bzw. uiptv_verify_status_* mit Zeitstempel), Verify-Anfragen mit 15 s Timeout (statt 30 s Standard).
+   bzw. uiptv_verify_status_* mit Zeitstempel), Verify-Anfragen mit 10 s Timeout; Fehler-Kategorien-Gruppierung
+   (errorCategory: Connect timed out / Connection refused / Reset / Network unreachable / DNS resolution failed /
+   HTTP xxx / JSON), Kopf-Checkbox je Kategorie mit Tooltip-Empfehlung (Delete/Retry/Wait/VPN), Auto-Scroll nur
+   wenn unten gepinnt, Select All + Delete Selected (Löschen nach Bestätigung + VACUUM).
    Kern: `AccountVerificationService` (CredentialCheck-Record mit valid/serverError/errorMessage),
    `XtremeParser.fetchUserInfo` (mit RequestOptions), ProgressDialog.addProblemEntry/addErrorResult.
+
+20. **VPN-Tag beim Bulk-Import (Version 0.1.14):** In Settings → Import Bulk Accounts unter „Start verification
+   after parsing“ eine „VPN“-Checkbox + 3-Zeichen-Textfeld (Länderkürzel, z. B. US/USA). Angewählt erhält jeder
+   importierte Account den Zusatz „ (VPN)“ bzw. „ (VPN: US)“ HINTER der vierstelligen Nummer — z. B.
+   „anonym.com (0012) (VPN: US)“; alphabetische Sortierbarkeit bleibt erhalten. Nummernvergabe läuft im
+   eigenen Namensraum (Nummern werden mit Suffix geprüft, Kollisionen mit ungetaggten Konten unmöglich);
+   gilt für Stalker, Xtream und M3U sowie für gruppierte Imports (nackter Servername + Suffix). Duplikat-
+   Erkennung unverändert (Server+MAC bzw. Server+Credentials bzw. Pfad). Suffix wird beim Clear zurückgesetzt.
+   `uiptv -names` fasst getaggte Namen nicht an (matchSuffix erkennt (NNNN) am Ende nicht → wird als „nackt“
+   übersprungen). Kern: AccountParser.setAccountNameSuffix, TextParserService.saveBulkAccounts-Überladung,
+   ParseMultipleAccountUI.resolveVpnNameSuffix, UiptUtils.getUniqueNameFromUrl(url, suffix).
 
 ## Aktuell offene Punkte / ToDos
 
