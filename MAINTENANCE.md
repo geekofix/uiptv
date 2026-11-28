@@ -263,6 +263,15 @@ Nutzerdaten (Datenbank etc.) liegen unter `~/.config/uiptv` (bzw. `~/uiptv` je n
 - [ ] Repo ist ein öffentlicher Fork; Privatstellung nur über GitHub-Support („detach fork") möglich —
       bewusst vorerst akzeptiert (Nutzer-Entscheidung, „Option 2")
 - [ ] Artifact-Aufbewahrung aktuell 1 Tag — auf Wunsch erhöhen
+- [ ] GEPLANT (nächste Sitzung, 0.1.14): Verify-Verbesserung in 3 Bausteinen — (a) Xtream-Konten mit
+      auth=0 + exp_date/status=expired als eigene Kategorie „Expired (API)“ statt „Result: Invalid“
+      (Gnadenfrist-Fall: API meldet abgelaufen, Streams laufen oft noch — kein Lösch-Hinweis);
+      (b) Parallelisierung max. 5 Worker, nie 2 Tests gleichzeitig auf denselben Server (Vorbild:
+      sp_checker, geekofick/sp_checker, app/window.py kick_off/_server_key, Thread-sicherer Balken);
+      (c) echter Stream-Test: bei abgelehntem Login ersten Live-Kanal öffnen, ~2 KB lesen
+      (Vorbild sp_checker stream_test_one; Xtream via buildXtremeStreamUrl, Stalker via
+      StalkerPortalPlayerService create_link mit Fallback) → Stufen Valid / Streams active (expired) /
+      Invalid. Detaillierter Prompt mit allen Infos existiert beim Nutzer (2026-11-28).
 
 ## Arbeitstechnik (Verbindlich!)
 
